@@ -38,6 +38,10 @@ button { font: inherit; color: inherit; cursor: pointer; border: none; backgroun
 h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw, 42px); margin: 0 0 18px; }
 #story { transition: opacity 0.2s, transform 0.2s; }
 #story.armed { opacity: 0.55; transform: scale(0.98); }
+#swipehint { position: fixed; left: 50%; bottom: max(28px, env(safe-area-inset-bottom)); transform: translate(-50%, 20px); opacity: 0; pointer-events: none;
+  font-family: var(--display); font-weight: 600; font-size: clamp(20px, 3vw, 28px); padding: 0.4em 1em; background: var(--tile); border-radius: 999px;
+  box-shadow: var(--shadow); white-space: nowrap; transition: opacity 0.2s, transform 0.2s; }
+#swipehint.on { opacity: 1; transform: translate(-50%, 0); }
 #story p { font-size: clamp(24px, 3.5vw, 34px); line-height: 1.75; margin: 0; }
 .w { cursor: pointer; display: inline-block; transition: transform 0.12s; }
 .w:active { transform: scale(0.94); }
@@ -80,6 +84,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
   <h1 id="title"></h1>
   <p id="text"></p>
 </main>
+<div id="swipehint">↑ Swipe up for a new story</div>
 
 <script>
 (function () {
@@ -586,12 +591,12 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
   // Switching stories: press and hold anywhere for half a second, then swipe up.
   // A quick tap still opens a word; a hold without a swipe does nothing.
   var hold = null, armed = false, swallow = false, y0 = 0, x0 = 0;
-  function disarm() { clearTimeout(hold); hold = null; armed = false; $("story").classList.remove("armed"); }
+  function disarm() { clearTimeout(hold); hold = null; armed = false; $("story").classList.remove("armed"); $("swipehint").classList.remove("on"); }
   document.addEventListener("pointerdown", function (e) {
     if (cur) return;
     y0 = e.clientY; x0 = e.clientX; swallow = false;
     clearTimeout(hold);
-    hold = setTimeout(function () { armed = true; swallow = true; $("story").classList.add("armed"); }, 500);
+    hold = setTimeout(function () { armed = true; swallow = true; $("story").classList.add("armed"); $("swipehint").classList.add("on"); }, 500);
   });
   document.addEventListener("pointermove", function (e) {
     if (!hold && !armed) return;
