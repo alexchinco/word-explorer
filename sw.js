@@ -1,7 +1,7 @@
 // Offline support for Word Explorer.
 // Every request tries the network first, so updates arrive whenever the iPad is online,
 // and each answer is saved. Without a connection, the saved copy is used instead.
-const CACHE = "reading-v5";
+const CACHE = "reading-v8";
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(["./", "./index.html"])));

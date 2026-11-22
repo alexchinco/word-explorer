@@ -29,16 +29,15 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; height: 100%; }
 body { background: var(--sky); color: var(--ink); font-family: var(--read); touch-action: manipulation;
-  -webkit-user-select: none; user-select: none; }
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; padding: 0; }
 
 /* The story */
 [hidden] { display: none !important; }
 #story { max-width: 780px; margin: 0 auto; padding: max(28px, env(safe-area-inset-top)) 24px 40px; }
 h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw, 42px); margin: 0 0 18px; }
-#next { position: fixed; right: max(18px, env(safe-area-inset-right)); bottom: max(18px, env(safe-area-inset-bottom)); z-index: 5;
-  font-family: var(--display); font-weight: 600; font-size: 22px; padding: 12px 22px; background: var(--tile); border-radius: 999px; box-shadow: var(--shadow); }
-#story { padding-bottom: 110px; }
+#story { transition: opacity 0.2s, transform 0.2s; }
+#story.armed { opacity: 0.55; transform: scale(0.98); }
 #story p { font-size: clamp(24px, 3.5vw, 34px); line-height: 1.75; margin: 0; }
 .w { cursor: pointer; display: inline-block; transition: transform 0.12s; }
 .w:active { transform: scale(0.94); }
@@ -59,6 +58,8 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
   background: var(--tile); border-radius: calc(var(--f) * 0.16); box-shadow: var(--shadow); }
 .opt .em { font-size: calc(var(--f) * 0.5); line-height: 1.2; }
 .opt .kw { font-size: max(13px, calc(var(--f) * 0.2)); line-height: 1.2; white-space: nowrap; }
+.opt.plain { padding: calc(var(--f) * 0.12) calc(var(--f) * 0.14); }
+.opt.plain .kw { font-size: max(18px, calc(var(--f) * 0.3)); }
 .opt .kw b, .ex b { color: var(--hi); font-weight: 700; }
 .ex { display: flex; flex-direction: column; align-items: center; font-size: max(14px, calc(var(--f) * 0.21)); line-height: 1.35; }
 .means { font-family: var(--display); font-weight: 600; font-size: max(14px, calc(var(--f) * 0.2)); color: var(--hi); white-space: nowrap; }
@@ -66,6 +67,8 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
 .label { font-size: max(18px, calc(var(--f) * 0.28)); padding: 0.3em 0.9em; }
 .notes { position: absolute; left: 50%; bottom: 100%; margin-bottom: calc(var(--f) * 0.25); transform: translateX(-50%); display: flex; gap: 12px; }
 .cap { color: var(--hi); }
+.hint { position: absolute; left: 50%; bottom: max(28px, env(safe-area-inset-bottom)); transform: translateX(-50%); font-size: clamp(48px, 9vh, 90px);
+  line-height: 1.2; padding: 0.12em 0.4em; background: var(--tile); border-radius: 0.4em; box-shadow: var(--shadow); white-space: nowrap; }
 .answer { font-weight: 700; font-size: var(--f); line-height: 1.15; padding: 0.06em 0 0.1em 0.2em; white-space: nowrap; }
 .answer b { color: var(--hi); }
 .note {
@@ -77,7 +80,6 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
   <h1 id="title"></h1>
   <p id="text"></p>
 </main>
-<button type="button" id="next">New story ↻</button>
 
 <script>
 (function () {
@@ -118,10 +120,6 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     ichthyo_fish: ["🐟", "fish", []],
     um_drum: ["🥁", "dr[um]", ["pl[um]", "g[um]", "h[um]"]],
     ov_movie: ["🎬", "m[ov]ie", ["pr[ov]e", "rem[ov]e"]],
-    call_phone: ["📞", "[call]", ["[call]ing", "re[call]"]],
-    learn_books: ["📚", "[learn]", ["[learn]ing"]],
-    hunt_bow: ["🏹", "[hunt]", ["[hunt]ing"]],
-    storm_storm: ["⛈️", "[storm]", ["[storm]y"]],
     geo_earth: ["🌎", "earth", []],
     logy_study: ["🔍", "study of", ["zoo[logy]"]],
     dis_dislike: ["👎", "[dis]like", ["[dis]agree", "[dis]appear"], "the opposite of"],
@@ -132,11 +130,8 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     eigh_sleigh: ["🛷", "sl[eigh]", ["w[eigh]", "n[eigh]"]],
     ov_glove: ["🧤", "gl[ov]e", ["l[ov]e", "ab[ov]e", "[ov]en"]],
     om_bomb: ["💣", "b[om]b", ["m[om]", "T[om]"]],
-    om_computer: ["💻", "c[om]puter", ["c[om]fort", "c[om]pany"]],
     u_cupcake: ["🧁", "c[u]pcake", ["s[u]n", "c[u]p", "b[u]g"]],
     i_puppies: ["🐶🐶", "pupp[i]es", ["bab[i]es", "bunn[i]es"]],
-    bird_bird: ["🐦", "[bird]", ["[bird]house"]],
-    fly_fly: ["🪰", "[fly]", ["butter[fly]", "dragon[fly]"]],
     ing_doing: ["🏃‍♀️", "runn[ing]", ["jump[ing]", "sing[ing]"], "happening now"],
     ade_lemonade: ["🧃", "lemon[ade]", ["f[ade]", "sh[ade]", "m[ade]"]],
     an_van: ["🚐", "v[an]", ["c[an]", "m[an]", "f[an]"]],
@@ -164,10 +159,57 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     u_unicorn: ["🦄", "[u]nicorn", ["m[u]sic", "c[u]te", "[u]se"]],
     ob_lobster: ["🦞", "l[ob]ster", ["j[ob]", "r[ob]in", "kn[ob]"]],
     lem_lemon: ["🍋", "[lem]on", ["prob[lem]"]],
-    lov_love: ["❤️", "[lov]e", ["g[lov]e", "[lov]ely"]],
-    love_heart: ["❤️", "[love]", ["g[love]", "[love]ly"]],
     lace_shoelace: ["👟", "shoe[lace]", ["p[lace]", "neck[lace]"]],
     ine_queen: ["👸", "queen", ["magaz[ine]", "sard[ine]"]],
+    y_gym: ["🏋️", "g[y]m", ["m[y]th", "s[y]mbol"]],
+    al_petal: ["🌸", "pet[al]", ["met[al]", "sign[al]"]],
+    en_hen: ["🐔", "h[en]", ["p[en]", "t[en]", "wh[en]"]],
+    ind_wind: ["🌬️", "w[ind]", []],
+    ind_mind: ["🧠", "m[ind]", ["k[ind]", "beh[ind]"]],
+    ape_grapes: ["🍇", "gr[ape]s", ["t[ape]", "c[ape]"]],
+    ule_mule: ["🫏", "m[ule]", ["r[ule]", "caps[ule]"]],
+    le_apple: ["🍎", "app[le]", ["tab[le]", "litt[le]"]],
+    ed_bed: ["🛏️", "b[ed]", ["r[ed]", "f[ed]", "sl[ed]"]],
+    em_gem: ["💎", "g[em]", ["st[em]", "[em]pty"]],
+    ist_list: ["📝", "l[ist]", ["m[ist]", "f[ist]"]],
+    ar_corn: ["🌽", "corn", ["w[ar]m", "sw[ar]m"]],
+    arr_arrow: ["🏹", "[arr]ow", ["c[arr]y"]],
+    arr_car: ["🚗", "car", []],
+    ous_dangerous: ["⚠️", "danger[ous]", ["nerv[ous]", "joy[ous]"], "full of"],
+    ov_boo: ["👻", "boo", ["m[ov]e", "pr[ov]e"]],
+    ie_cookie: ["🍪", "cook[ie]", ["mov[ie]", "bab[ie]s"]],
+    ie_pie: ["🥧", "p[ie]", ["t[ie]", "l[ie]"]],
+    ie_egg: ["🥚", "egg", []],
+    ur_turtle: ["🐢", "t[ur]tle", ["b[ur]n", "h[ur]t"]],
+    th_tiger: ["🐯", "tiger", ["[Th]omas"]],
+    ad_sad: ["😢", "s[ad]", ["d[ad]", "m[ad]", "gl[ad]"]],
+    ev_seven: ["7️⃣", "s[ev]en", ["n[ev]er", "[ev]ery"]],
+    ev_evil: ["😈", "[ev]il", ["[ev]en"]],
+    ies_puppies: ["🐶🐶", "pupp[ies]", ["bab[ies]", "bunn[ies]"], "more than one"],
+    ump_pumpkin: ["🎃", "p[ump]kin", ["b[ump]", "l[ump]", "d[ump]"]],
+    ock_sock: ["🧦", "s[ock]", ["r[ock]", "l[ock]", "cl[ock]"]],
+    one_bone: ["🦴", "b[one]", ["c[one]", "st[one]", "al[one]"]],
+    alk_walk: ["🚶", "w[alk]", ["ch[alk]", "st[alk]"]],
+    ire_fire: ["🔥", "f[ire]", ["t[ire]d", "h[ire]"]],
+    om_tomato: ["🍅", "t[om]ato", ["t[om]orrow"]],
+    poss_mom: ["👩‍👧", "mom['s]", ["dad['s]", "dog['s]"], "belongs to"],
+    ail_snail: ["🐌", "sn[ail]", ["t[ail]", "r[ail]", "m[ail]"]],
+    ood_wood: ["🪵", "w[ood]", ["g[ood]", "h[ood]"]],
+    ave_wave: ["🌊", "w[ave]", ["c[ave]", "s[ave]", "g[ave]"]],
+    aw_paw: ["🐾", "p[aw]", ["s[aw]", "dr[aw]", "str[aw]"]],
+    ou_house: ["🏠", "h[ou]se", ["m[ou]se", "l[ou]d"]],
+    ou_soup: ["🍜", "s[ou]p", ["y[ou]", "gr[ou]p"]],
+    ou_duck: ["🦆", "duck", ["t[ou]ch", "c[ou]ntry"]],
+    o_wood: ["🪵", "wood", []],
+    o_fishsound: ["🐟", "fish", []],
+    en_pin: ["📌", "pin", []],
+    ple_apple: ["🍎", "ap[ple]", ["peo[ple]", "pur[ple]"]],
+    oor_door: ["🚪", "d[oor]", ["fl[oor]"]],
+    ess_princess: ["👸", "princ[ess]", ["lion[ess]", "host[ess]"], "a girl or woman"],
+    per_pepper: ["🌶️", "pep[per]", ["su[per]", "pa[per]"]],
+    ot_carrot: ["🥕", "carr[ot]", ["pil[ot]", "parr[ot]"]],
+    an_orange: ["🍊", "or[an]ge", ["hum[an]", "Afric[an]"]],
+    tor_story: ["📚", "s[tor]y", ["his[tor]y"]],
     a_apple: ["🍎", "[a]pple", ["c[a]t", "h[a]t", "m[a]p"]], a_baby: ["👶", "b[a]by", ["p[a]per", "t[a]ble", "l[a]dy"]],
     a_banana: ["🍌", "b[a]nana", ["[a]bout", "[a]go", "sof[a]"]],
     astro_astronaut: ["🧑‍🚀", "[astro]naut", ["[astro]nomy"], "star"],
@@ -178,7 +220,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     c_cat: ["🐱", "[c]at", ["[c]up", "[c]ake", "[c]ome"]], c_pencil: ["✏️", "pen[c]il", ["[c]ity", "fa[c]e", "i[c]e"]],
     ch_cheese: ["🧀", "[ch]eese", ["[ch]in", "mu[ch]", "lun[ch]"]], ch_school: ["🏫", "s[ch]ool", ["e[ch]o"]], ch_chef: ["👨‍🍳", "[ch]ef", ["ma[ch]ine"]],
     e_egg: ["🥚", "[e]gg", ["b[e]d", "r[e]d", "t[e]n"]], e_zebra: ["🦓", "z[e]bra", ["m[e]", "b[e]", "h[e]"]],
-    e_chicken: ["🐔", "chick[e]n", ["kitt[e]n", "op[e]n", "sev[e]n"]], e_fish: ["🐟", "f[i]sh", []],
+    e_chicken: ["🐔", "chick[e]n", ["kitt[e]n", "op[e]n", "sev[e]n"]],
     ea_peach: ["🍑", "p[ea]ch", ["[ea]t", "s[ea]", "b[ea]ch"]], ea_bread: ["🍞", "br[ea]d", ["h[ea]d", "r[ea]dy", "f[ea]ther"]],
     ea_steak: ["🥩", "st[ea]k", ["gr[ea]t", "br[ea]k"]],
     ear_ear: ["👂", "[ear]", ["h[ear]", "n[ear]", "d[ear]"]], ear_bear: ["🐻", "b[ear]", ["p[ear]", "w[ear]"]],
@@ -208,7 +250,6 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     ov_clover: ["🍀", "cl[ov]er", ["[ov]er", "st[ov]e"]],
     own_crown: ["👑", "cr[own]", ["d[own]", "t[own]", "cl[own]"]], own_blown: ["🌬️", "bl[own]", ["gr[own]", "sh[own]", "thr[own]"]],
     round_round: ["🎠", "merry-go-[round]", ["g[round]", "a[round]"]],
-    star_star: ["⭐", "[star]", ["[star]t", "[star]fish"]],
     s_snake: ["🐍", "[s]nake", ["[s]it", "bu[s]", "ye[s]"]], s_rose: ["🌹", "ro[s]e", ["i[s]", "ha[s]", "dog[s]"]],
     sch_school: ["🏫", "[sch]ool", []], sch_sheep: ["🐑", "sheep", []],
     scope_microscope: ["🔬", "micro[scope]", ["peri[scope]"], "look at"],
@@ -232,26 +273,119 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
   // regular choices: that makes the word tricky, and the icon only shows up at the reveal.
   // A chunk with no choices (a consonant with only one sound, like m or str) gets no icons at all.
   // A plural s is written "s:+" and an emoji for the thing: it shows two of them ("stars" shows two stars).
-  // A past-tense ed is written "ed:<": it shows that the thing already happened.
+  // A past-tense ed is written "ed:<": no picture, just a before-and-after pair ("walk → walked").
   var WORDS = {
+    // Empress Theodora's Brave Choice
+    across: "a:a_apple,a_baby,a_banana* cr oss:oss_floss",
+    actress: "act r ess:ess_princess",
+    angry: "an:an_van gr y:y_puppy*,y_fly,y_yoyo",
+    away: "a:a_apple,a_baby,a_banana* w ay:ay_crayon",
+    brave: "br ave:ave_wave",
+    city: "c:c_cat,c_pencil* i:i_fish*,i_kite t y:y_puppy*,y_fly,y_yoyo",
+    constantinople: "c on:on_bonfire*,on_onion st an:an_van t in:in_pin o:o_octopus,o_ocean,o_lemon* ple:ple_apple",
+    crowds: "cr ow:ow_cow*,ow_snow d s:+👥",
+    empire: "em:em_gem p ire:ire_fire",
+    empress: "em:em_gem pr ess:ess_princess",
+    huge: "h u:u_cupcake,u_unicorn* ge",
+    rule: "r ule:ule_mule",
+    rulers: "rul er:er_sunflower,er_teacher* s:+👑",
+    "emperor's": "em:em_gem per:per_pepper or:or_corn,or_actor* 's:poss_mom",
+    family: "f am:am_ham*,am_flame i:i_fish*,i_kite ly:ly_friendly",
+    fires: "fire s:+🔥",
+    girls: "g:g_giraffe,g_goat* ir:ir_bird l s:+👧",
+    great: "gr ea:ea_peach,ea_bread,ea_steak* t",
+    helped: "help ed:<",
+    helpers: "help er:er_sunflower,er_teacher* s:+🧑‍🤝‍🧑",
+    historian: "his tor:tor_story i:i_fish,i_kite,i_puppies* an:an_van,an_orange*",
+    laws: "l aw:aw_paw s:+📜",
+    new: "n ew:ew_stew*,ew_sew",
+    poor: "p oor:oor_door",
+    protect: "pr o:o_octopus,o_ocean,o_lemon* t ect",
+    rather: "r a:a_apple*,a_baby,a_banana th:th_thumb,th_feather* er:er_sunflower",
+    rioted: "r i:i_fish,i_kite* ot:ot_carrot ed:<",
+    sail: "s ail:ail_snail",
+    set: "s et:et_net*,et_ballet",
+    stay: "st ay:ay_crayon",
+    stayed: "stay ed:<",
+    stood: "st ood:ood_wood",
+    theodora: "th:th_thumb*,th_feather e:e_egg,e_zebra*,e_chicken o:o_octopus,o_ocean,o_lemon* d or:or_corn*,or_actor a:a_apple,a_baby,a_banana*",
+    wanted: "want ed:<",
+    woman: "w o:o_octopus,o_ocean,o_lemon,!o_wood man:man_man,man_human*",
+    women: "w o:o_octopus,o_ocean,o_lemon,!o_fishsound m en:en_hen,!en_pin",
+    young: "y:y_puppy,y_fly,y_yoyo* ou:ou_house,ou_soup,!ou_duck ng",
+
+    // Dorothy Hodgkin's Tiny Puzzles and Hedy Lamarr's Secret Signal
+    antheil: "an:an_van th:th_thumb,th_feather,!th_tiger eil",
+    block: "bl ock:ock_sock",
+    channel: "ch:ch_cheese*,ch_school,ch_chef ann:an_van el:el_elephant,el_camel*",
+    chemistry: "ch:ch_cheese,ch_school*,ch_chef em:em_gem ist:ist_list r y:y_puppy*,y_fly,y_yoyo",
+    clever: "cl ev:ev_seven*,ev_evil er:er_sunflower",
+    crystals: "cr y:y_puppy,y_fly,y_gym* st al:al_petal s:+💎",
+    diabetes: "d i:i_fish,i_kite* a:a_apple,a_baby,a_banana* b e:e_egg,e_zebra*,e_chicken t es",
+    dorothy: "d or:or_corn*,or_actor o:o_octopus,o_ocean,o_lemon* th:th_thumb*,th_feather y:y_puppy*,y_fly,y_yoyo",
+    during: "d ur:ur_turtle ing:ing_ring",
+    enemies: "en:en_hen e:e_egg,e_zebra,e_chicken* m ies:ies_puppies",
+    famous: "f a:a_apple,a_baby*,a_banana m ous:ous_dangerous",
+    find: "f ind:ind_wind,ind_mind*",
+    friend: "fr ie:ie_cookie,ie_pie,!ie_egg nd",
+    george: "g:g_giraffe*,g_goat e or:or_corn*,or_actor g:g_giraffe*,g_goat e",
+    had: "h ad:ad_sad",
+    hedy: "h e:e_egg*,e_zebra,e_chicken d y:y_puppy*,y_fly,y_yoyo",
+    help: "h el:el_elephant*,el_camel p",
+    helps: "h el:el_elephant*,el_camel p s:s_snake*,s_rose",
+    hers: "her s:s_snake,s_rose*",
+    hodgkin: "h o:o_octopus*,o_ocean,o_lemon dg k in:in_pin",
+    idea: "i:i_fish,i_kite* d e:e_egg,e_zebra*,e_chicken a:a_apple,a_baby,a_banana*",
+    ideas: "i:i_fish,i_kite* d e:e_egg,e_zebra*,e_chicken a:a_apple,a_baby,a_banana* s:+💡",
+    insulin: "in:in_pin s u:u_cupcake*,u_unicorn l in:in_pin",
+    invent: "in:in_pin v ent:ent_tent*,ent_present",
+    jump: "j ump:ump_pumpkin",
+    lamarr: "l a:a_apple,a_baby,a_banana* m arr:arr_arrow,!arr_car",
+    medicine: "m ed:ed_bed i:i_fish*,i_kite c:c_cat,c_pencil* ine:ine_pine,ine_engine*",
+    molecules: "m ol:ol_dolphin*,ol_old e:e_egg,e_zebra,e_chicken* c:c_cat*,c_pencil ule:ule_mule s:+⚛️",
+    movie: "m ov:ov_glove,ov_clover,!ov_boo ie:ie_cookie*,ie_pie",
+    nobel: "n o:o_octopus,o_ocean*,o_lemon b el:el_elephant*,el_camel",
+    phones: "ph one:one_bone s:+📱",
+    prize: "pr i:i_fish,i_kite* ze",
+    puzzle: "p u:u_cupcake*,u_unicorn zz le:le_apple",
+    radio: "r a:a_apple,a_baby*,a_banana d i:i_fish,i_kite,i_puppies* o:o_octopus,o_ocean*,o_lemon",
+    rays: "r ay:ay_crayon s:+✨",
+    shape: "sh ape:ape_grapes",
+    shapes: "sh ape:ape_grapes s:+🔷",
+    signals: "s ig:ig_pig n al:al_petal s:+📶",
+    solving: "s:s_snake*,s_rose ol:ol_dolphin*,ol_old v ing:ing_doing",
+    star: "st ar:ar_car*,ar_parrot",
+    talk: "t alk:alk_walk",
+    ten: "t en:en_hen",
+    things: "th:th_thumb*,th_feather ing:ing_ring s:+🎲",
+    today: "to d ay:ay_crayon",
+    used: "u:u_cupcake,u_unicorn* s:s_snake,s_rose* ed:<",
+    war: "w ar:ar_car,ar_parrot,!ar_corn",
+    way: "w ay:ay_crayon",
+    wires: "w ire:ire_fire s:+🔌",
+    without: "with out:out_shout",
+    won: "w on:on_bonfire,on_onion*",
+    worked: "w or:or_corn,or_doctor* k ed:<",
+    years: "y:y_puppy,y_fly,y_yoyo* ear:ear_ear*,ear_bear,ear_earth s:+📅",
+
     // Ada Lovelace's Thinking Machine
     ada: "a:a_apple,a_baby*,a_banana d a:a_apple,a_baby,a_banana*",
     babbage: "b abb:abb_rabbit age:age_page,age_cabbage*",
-    birds: "bird:bird_bird s:+🐦",
-    call: "call:call_phone",
+    birds: "bird s:+🐦",
+    call: "c:c_cat*,c_pencil all:all_ball",
     charles: "ch:ch_cheese*,ch_school,ch_chef ar:ar_car*,ar_parrot les",
-    computer: "com:om_bomb,om_computer* p u:u_cupcake,u_unicorn* t er:er_sunflower",
+    computer: "com:om_bomb,om_tomato* p u:u_cupcake,u_unicorn* t er:er_sunflower",
     day: "d ay:ay_crayon",
     even: "e:e_egg,e_zebra* ven:ven_seven",
     fly: "fl y:y_puppy,y_fly*,y_yoyo",
-    flying: "fly:fly_fly ing:ing_doing",
+    flying: "fly ing:ing_doing",
     follow: "f ol:ol_dolphin*,ol_old l ow:ow_cow,ow_snow*",
     gears: "g:g_giraffe,g_goat* ear:ear_ear*,ear_bear,ear_earth s:+⚙️",
     imagined: "im:im_swim ag:ag_bag,ag_magic* in:in_pin ed:<",
     inventor: "in:in_pin v ent:ent_tent*,ent_present or:or_corn,or_actor*",
     like: "l ike:ike_bike",
-    loved: "lov:lov_love ed:<",
-    lovelace: "love:love_heart lace:lace_shoelace",
+    loved: "l ov:ov_glove ed:<",
+    lovelace: "love lace:lace_shoelace",
     make: "m ake:ake_cake",
     machine: "m a:a_apple,a_baby,a_banana* ch:ch_cheese,ch_school,ch_chef* ine:ine_pine,ine_engine,!ine_queen",
     machines: "m a:a_apple,a_baby,a_banana* ch:ch_cheese,ch_school,ch_chef* ine:ine_pine,ine_engine,!ine_queen s:+🤖",
@@ -275,7 +409,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     best: "b est:est_nest",
     big: "b ig:ig_pig",
     brother: "br other:other_mother",
-    called: "call:call_phone ed:<",
+    called: "call ed:<",
     cliffs: "cl i:i_fish*,i_kite ff s:+🏔️",
     creature: "cr ea:ea_peach*,ea_bread,ea_steak ture:ture_picture",
     crumbly: "cr um:um_drum b ly:ly_friendly",
@@ -289,7 +423,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     giant: "g:g_giraffe*,g_goat i:i_fish,i_kite* ant:ant_ant,ant_elephant*",
     head: "h ea:ea_peach,ea_bread*,ea_steak d",
     herself: "her self:self_selfie",
-    hunters: "hunt:hunt_bow er:er_sunflower,er_teacher* s:+🏹",
+    hunters: "hunt er:er_sunflower,er_teacher* s:+🏹",
     ichthyosaur: "ichthyo:ichthyo_fish saur:saur_dino",
     later: "l a:a_apple,a_baby*,a_banana ter:ter_water",
     lived: "l i:i_fish*,i_kite v ed:<",
@@ -305,7 +439,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     searched: "s:s_snake*,s_rose ear:ear_ear,ear_bear,ear_earth* ch:ch_cheese*,ch_school,ch_chef ed:<",
     skeleton: "sk el:el_elephant*,el_camel e:e_egg,e_zebra,e_chicken* ton:ton_carton",
     skull: "sk u:u_cupcake ll",
-    storms: "storm:storm_storm s:+⛈️",
+    storms: "storm s:+⛈️",
     taught: "t aught:aught_caught",
     thought: "th:th_thumb*,th_feather ought:ought_bought",
     tiny: "t i:i_fish,i_kite* n y:y_puppy*,y_fly,y_yoyo",
@@ -316,10 +450,10 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     after: "af:af_giraffe ter:ter_water",
     along: "a:a_apple,a_baby,a_banana* l ong:ong_song",
     around: "a:a_apple,a_baby,a_banana* round:round_round",
-    astronomer: "astro:astro_astronaut nom:om_bomb,om_computer* er:er_sunflower,er_teacher*",
+    astronomer: "astro:astro_astronaut nom:om_bomb,om_tomato* er:er_sunflower,er_teacher*",
     caroline: "car:car_car,car_scary* o:o_octopus,o_ocean,o_lemon* l ine:ine_pine*,ine_engine",
-    comet: "c:c_cat*,c_pencil om:om_bomb*,om_computer et:et_rocket*,et_ballet",
-    comets: "c:c_cat*,c_pencil om:om_bomb*,om_computer et:et_rocket*,et_ballet s:+☄️",
+    comet: "c:c_cat*,c_pencil om:om_bomb*,om_tomato et:et_rocket*,et_ballet",
+    comets: "c:c_cat*,c_pencil om:om_bomb*,om_tomato et:et_rocket*,et_ballet s:+☄️",
     each: "ea:ea_peach*,ea_bread,ea_steak ch:ch_cheese*,ch_school,ch_chef",
     eight: "eigh:eigh_sleigh*,eigh_height t",
     england: "eng:eng_engine,!eng_ring land:land_landing",
@@ -330,7 +464,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     grew: "gr ew:ew_stew*,ew_sew",
     herschel: "her sch:sch_school,!sch_sheep el:el_elephant,el_camel*",
     island: "is:is_kiss,!is_eye land:land_landing",
-    learned: "learn:learn_books ed:<",
+    learned: "learn ed:<",
     math: "m ath:ath_bath",
     measure: "m ea:ea_peach,ea_bread*,ea_steak sure:sure_treasure",
     moved: "m ov:ov_glove,ov_clover,!ov_movie ed:<",
@@ -339,18 +473,20 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     orbit: "or:or_corn*,or_doctor bit:bit_rabbit",
     own: "own:own_crown,own_blown*",
     sky: "sk y:y_puppy,y_fly*,y_yoyo",
-    stars: "star:star_star s:+⭐",
+    stars: "star s:+⭐",
     sun: "s:s_snake*,s_rose un:un_run",
     surprises: "sur:sur_surf pr ise:ise_sunrise s:+🎁",
     swept: "sw ept:ept_slept",
     telescope: "tele:tele_tv scope:scope_microscope"
   };
   // Sight words: common words that are learned by sight rather than sounded out.
+  // A picture of what the word means, shown at the bottom if the child stays on a word for 10 seconds.
+  var HINTS = { astronomer: "🔭✨", telescope: "🔭", comet: "☄️", comets: "☄️☄️", island: "🏝️", stars: "✨", night: "🌙", measure: "📏", math: "➕➖", orbit: "🪐", surprises: "🎉", nature: "🌳🦋", grew: "🌱🌳", sun: "☀️", england: "🇬🇧", germany: "🇩🇪", learned: "🧑‍🎓", fossils: "🐚🦴", fossil: "🦴", skull: "💀", skeleton: "🩻", cliffs: "🏔️", storms: "⛈️", sea: "🌊", reptile: "🦎", lizard: "🦎", neck: "🦒", tiny: "🐜", crumbly: "🍪", brother: "👦", twelve: "12", searched: "🔍", discovered: "🔍💡", geology: "🪨🌍", ichthyosaur: "🐟🦎", scientists: "🧑‍🔬🧑‍🔬", fish: "🐟", machines: "⚙️🤖", machine: "⚙️", birds: "🐦🐦", fly: "🐦", flying: "🪽", gears: "⚙️⚙️", inventor: "🧑‍🔧💡", computer: "💻", program: "💻📝", music: "🎶", imagined: "👧💭💡", plans: "📝", problems: "❓", steps: "👣", solve: "✅", crystals: "💎", molecules: "⚛️", insulin: "💉", medicine: "💊", puzzle: "🧩", shapes: "🔺🟦", shape: "🔺", prize: "🏆", rays: "🩻", chemistry: "🧪", movie: "🎬", famous: "🌟📸", invent: "💡🔧", radio: "📻", signals: "📶", phones: "📱📱", wires: "🔌", block: "✋", jump: "🦘", channel: "📺", clever: "🧠", idea: "💡", ideas: "💡💡", friend: "🧑‍🤝‍🧑", talk: "🗣️", city: "🏙️", family: "👨‍👩‍👧", actress: "🎭", empress: "👸", empire: "🗺️", crowds: "👥", angry: "😠", fires: "🔥", sail: "⛵", brave: "🦁", laws: "📜", girls: "👧👧", women: "👩👩", historian: "📜✍️", rulers: "👑", protect: "🛡️", "emperor's": "🤴" };
   // Words whose clearest explanation is a picture of what they mean, shown after the word at the reveal.
   var ANSWERS = { eight: "8" };
   // Names: a capital letter at the start tells you the word is a name.
-  var NAMES = "ada anning babbage caroline charles england germany herschel lovelace mary sun".split(" ");
-  var SIGHT = "a an and all by could for he her how in is it its many of on one out people she so some that the this to up very was when which with".split(" ");
+  var NAMES = "constantinople theodora ada anning antheil babbage caroline charles chemistry dorothy england george germany hedy herschel hodgkin lamarr lovelace mary nobel prize sun war world".split(" ");
+  var SIGHT = "a also an and all as at be because but by could for from he her home how in is it its many not of on one our out people said she so some that the them they this to two up very was when which who with would x".split(" ");
 
   var STORIES = [
     { title: "Caroline Herschel's Comets",
@@ -367,7 +503,20 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
       text: "Ada Lovelace loved math and machines. When she was twelve, she studied how birds fly and made plans for a flying machine. " +
         "Later, she met an inventor named Charles Babbage. He was planning a giant machine made of gears that could solve math problems. " +
         "Ada wrote steps for the machine to follow. Many people call this the first computer program! " +
-        "Ada even imagined that machines like this could one day make music." }
+        "Ada even imagined that machines like this could one day make music." },
+    { title: "Dorothy Hodgkin's Tiny Puzzles",
+      text: "Dorothy Hodgkin loved crystals. When she was ten, she grew her own crystals at home. Later, she used X-rays to find the shapes of tiny molecules. " +
+        "It was like solving a giant puzzle. She worked for years to find the shape of insulin, a medicine that helps people with diabetes. " +
+        "In 1964, she won the Nobel Prize in Chemistry!" },
+    { title: "Hedy Lamarr's Secret Signal",
+      text: "Hedy Lamarr was a famous movie star. But she also loved to invent things. During World War Two, she and a friend named George Antheil had a clever idea. " +
+        "They found a way for radio signals to jump from channel to channel, so enemies could not block them. " +
+        "Today, ideas like hers help our phones talk without wires." },
+    { title: "Empress Theodora's Brave Choice",
+      text: "Theodora grew up in the great city of Constantinople. Her family was poor, and as a young woman she worked as an actress. " +
+        "Later, she became the empress, and she helped rule a huge empire. One day, angry crowds rioted and set fires across the city. " +
+        "The emperor's helpers wanted to sail away. A historian wrote that Theodora stood up and said she would rather stay and be brave. " +
+        "Because of her, the rulers stayed. Theodora also helped make new laws to protect girls and women." }
   ];
 
   var $ = function (id) { return document.getElementById(id); };
@@ -381,12 +530,12 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
       at += c.t.length;
       if (bits[1] && bits[1].charAt(0) === "+") { // a plural: two of the thing
         var base = key.slice(0, at - c.t.length), id = "plural_" + key;
-        SOUNDS[id] = [bits[1].slice(1) + bits[1].slice(1), base + "[" + c.t + "]", ["cat[s]", "dog[s]", "book[s]"], "more than one " + base];
+        SOUNDS[id] = [bits[1].slice(1) + bits[1].slice(1), "[" + c.t + "]", ["cat[s]", "dog[s]", "book[s]"], "more than one " + base];
         c.o = [id]; c.ok = id;
         return c;
       }
       if (bits[1] === "<") { // past tense: it already happened
-        SOUNDS["past_" + key] = ["⏪", key.slice(0, at - c.t.length) + "[" + c.t + "]", ["jump[ed]", "play[ed]", "paint[ed]"], "already happened"];
+        SOUNDS["past_" + key] = ["", "walk → walk[ed]", ["jump[ed]", "play[ed]", "paint[ed]"], "already happened"];
         c.o = ["past_" + key]; c.ok = c.o[0];
         return c;
       }
@@ -396,7 +545,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
         else c.o.push(id);
       });
       if (!c.ok && c.o.length === 1) c.ok = c.o[0];
-      if (/^[^aeiouy]+$/.test(c.t) && c.o.length === 1 && c.ok === c.o[0]) c.o = []; // one-sound consonant: no icons
+      if (/^[^aeiouy]+$/.test(c.t) && c.o.length === 1 && c.ok === c.o[0] && !SOUNDS[c.ok][3]) c.o = []; // one-sound consonant: no icons
       return c;
     });
   }
@@ -432,11 +581,44 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     try { localStorage.setItem("lastStory", pick); } catch (e) {}
     show(pick);
   }
-  $("next").addEventListener("click", newStory);
   newStory();
+
+  // Switching stories: press and hold anywhere for half a second, then swipe up.
+  // A quick tap still opens a word; a hold without a swipe does nothing.
+  var hold = null, armed = false, swallow = false, y0 = 0, x0 = 0;
+  function disarm() { clearTimeout(hold); hold = null; armed = false; $("story").classList.remove("armed"); }
+  document.addEventListener("pointerdown", function (e) {
+    if (cur) return;
+    y0 = e.clientY; x0 = e.clientX; swallow = false;
+    clearTimeout(hold);
+    hold = setTimeout(function () { armed = true; swallow = true; $("story").classList.add("armed"); }, 500);
+  });
+  document.addEventListener("pointermove", function (e) {
+    if (!hold && !armed) return;
+    if (!armed && Math.hypot(e.clientX - x0, e.clientY - y0) > 12) { clearTimeout(hold); hold = null; return; } // moved too soon: not a hold
+    if (armed && y0 - e.clientY > 90) { disarm(); swapStory(); }
+  });
+  document.addEventListener("pointerup", disarm);
+  document.addEventListener("pointercancel", disarm);
+  document.addEventListener("touchmove", function (e) { if (armed) e.preventDefault(); }, { passive: false });
+  document.addEventListener("click", function (e) { if (swallow) { swallow = false; e.stopPropagation(); e.preventDefault(); } }, true);
+  function swapStory() {
+    var st = $("story");
+    st.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(-60px)" }], { duration: 220, easing: "ease-in", fill: "forwards" }).onfinish = function () {
+      newStory();
+      st.getAnimations().forEach(function (a) { a.cancel(); });
+      st.animate([{ opacity: 0, transform: "translateY(60px)" }, { opacity: 1, transform: "none" }], { duration: 320, easing: "cubic-bezier(.2,.8,.3,1)" });
+    };
+  }
   Object.keys(WORDS).forEach(function (k) { // catch typos in the word list
     parse(WORDS[k], k).forEach(function (c) { c.o.concat(c.ok ? [c.ok] : []).forEach(function (id) { if (!SOUNDS[id]) console.warn("No icon", id, "in", k); }); });
     if (parse(WORDS[k], k).map(function (c) { return c.t; }).join("") !== k) console.warn("Chunks don't spell", k);
+    parse(WORDS[k], k).forEach(function (c) {
+      c.o.concat(c.ok ? [c.ok] : []).forEach(function (id) {
+        var kw = SOUNDS[id] && SOUNDS[id][1].replace(/[\[\]]/g, "").toLowerCase();
+        if (id.indexOf("plural_") !== 0 && id.indexOf("past_") !== 0 && kw && (kw === k || k.replace(/(s|ed|ing)$/, "") === kw)) console.warn("Icon gives the word away:", id, "in", k);
+      });
+    });
   });
 
   // ---- The word screen ----
@@ -444,8 +626,8 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
 
   function icon(id, cls) {
     var b = document.createElement("div");
-    b.className = "opt" + (cls ? " " + cls : ""); b.dataset.id = id;
-    b.innerHTML = '<span class="em">' + SOUNDS[id][0] + '</span><span class="kw">' + bracket(SOUNDS[id][1]) + "</span>";
+    b.className = "opt" + (cls ? " " + cls : "") + (SOUNDS[id][0] ? "" : " plain"); b.dataset.id = id;
+    b.innerHTML = (SOUNDS[id][0] ? '<span class="em">' + SOUNDS[id][0] + "</span>" : "") + '<span class="kw">' + bracket(SOUNDS[id][1]) + "</span>";
     return b;
   }
 
@@ -526,6 +708,13 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
       lbl.animate([{ opacity: 0, transform: "scale(0.5)" }, { opacity: 1, transform: "none" }], { duration: 380, delay: HOLD, easing: POP, fill: "backwards" });
     }
     if (nm) nm.animate([{ opacity: 0, transform: "scale(0.5)" }, { opacity: 1, transform: "none" }], { duration: 380, delay: HOLD, easing: POP, fill: "backwards" });
+    if (HINTS[key]) cur.hintTimer = setTimeout(function () { // stuck for a while: show a picture hint
+      if (!cur || cur.focus !== focus || cur.closing) return;
+      var h = document.createElement("div");
+      h.className = "hint"; h.textContent = HINTS[key];
+      focus.appendChild(h);
+      h.animate([{ opacity: 0, transform: "translateX(-50%) translateY(30px) scale(0.6)" }, { opacity: 1, transform: "translateX(-50%)" }], { duration: 450, easing: POP });
+    }, 10000);
     cur.ready = Date.now() + HOLD + (sight ? 300 : SPLIT + 300);
 
     focus.addEventListener("click", function () { advance(); });
@@ -611,6 +800,8 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     if (!cur || cur.closing) return;
     var c = cur;
     c.closing = true;
+    clearTimeout(c.hintTimer);
+    each(c.focus.querySelectorAll(".hint"), function (h) { h.remove(); });
     c.focus.getAnimations({ subtree: true }).forEach(function (a) { a.finish(); });
     var g = joinGeometry();
     each(c.row.querySelectorAll(".opts, .label, .notes, .answer"), function (o) { o.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: "forwards" }); });
