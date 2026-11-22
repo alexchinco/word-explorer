@@ -33,8 +33,15 @@ body { background: var(--sky); color: var(--ink); font-family: var(--read); touc
 button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; padding: 0; }
 
 /* The story */
-#story { max-width: 780px; margin: 0 auto; padding: max(28px, env(safe-area-inset-top)) 24px 40px; }
+[hidden] { display: none !important; }
+#home, #story { max-width: 780px; margin: 0 auto; padding: max(28px, env(safe-area-inset-top)) 24px 40px; }
 h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw, 42px); margin: 0 0 18px; }
+#tiles { display: grid; gap: 16px; }
+.storytile { display: flex; align-items: center; gap: 22px; padding: 26px 28px; background: var(--tile); border-radius: 26px; box-shadow: var(--shadow);
+  font-family: var(--display); font-weight: 600; font-size: clamp(26px, 4vw, 36px); text-align: left; }
+.storytile .si { font-size: 1.8em; line-height: 1; }
+#back { font-family: var(--display); font-weight: 600; font-size: 20px; padding: 8px 16px 8px 12px; margin: 0 0 14px -4px; background: var(--tile);
+  border-radius: 999px; box-shadow: var(--shadow); }
 #story p { font-size: clamp(24px, 3.5vw, 34px); line-height: 1.75; margin: 0; }
 .w { cursor: pointer; display: inline-block; transition: transform 0.12s; }
 .w:active { transform: scale(0.94); }
@@ -60,13 +67,20 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
 .means { font-family: var(--display); font-weight: 600; font-size: max(14px, calc(var(--f) * 0.2)); color: var(--hi); white-space: nowrap; }
 .label, .note { font-family: var(--display); font-weight: 600; background: var(--tile); box-shadow: var(--shadow); border-radius: 999px; white-space: nowrap; }
 .label { font-size: max(18px, calc(var(--f) * 0.28)); padding: 0.3em 0.9em; }
-.note { position: absolute; left: 50%; bottom: 100%; margin-bottom: calc(var(--f) * 0.25); transform: translateX(-50%);
+.notes { position: absolute; left: 50%; bottom: 100%; margin-bottom: calc(var(--f) * 0.25); transform: translateX(-50%); display: flex; gap: 12px; }
+.cap { color: var(--hi); }
+.note {
   font-size: max(16px, calc(var(--f) * 0.24)); padding: 0.25em 0.8em; color: var(--hi); }
 </style>
 </head>
 <body>
-<main id="story">
-  <h1>Caroline Herschel's Comets</h1>
+<main id="home">
+  <h1>Word Explorer</h1>
+  <div id="tiles"></div>
+</main>
+<main id="story" hidden>
+  <button type="button" id="back" aria-label="Back to stories">‹ Stories</button>
+  <h1 id="title"></h1>
   <p id="text"></p>
 </main>
 
@@ -76,6 +90,45 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
   // id: [emoji, keyword with the chunk in brackets, example words that use the same letters the same way,
   //      and for a chunk with a meaning (a suffix, a Greek root), what it means]
   var SOUNDS = {
+    all_ball: ["🏀", "b[all]", ["t[all]", "f[all]", "w[all]"]],
+    ake_cake: ["🎂", "c[ake]", ["l[ake]", "sn[ake]", "m[ake]"]],
+    ame_game: ["🎮", "g[ame]", ["n[ame]", "s[ame]", "fr[ame]"]],
+    ant_ant: ["🐜", "[ant]", ["pl[ant]", "p[ant]s"]], ant_elephant: ["🐘", "eleph[ant]", ["gi[ant]", "inst[ant]"]],
+    ar_car: ["🚗", "c[ar]", ["f[ar]", "p[ar]k", "j[ar]"]], ar_parrot: ["🦜", "p[ar]rot", ["c[ar]rot", "[ar]row"]],
+    aught_caught: ["🎣", "c[aught]", ["d[aught]er", "t[aught]"]],
+    be_bee: ["🐝", "[be]e", ["[be]gin", "[be]fore"]],
+    cover_cover: ["🛏️", "[cover]", ["re[cover]", "un[cover]"]],
+    dis_disappear: ["🫥", "[dis]appear", ["[dis]like", "[dis]agree"], "the opposite of"],
+    eck_check: ["✔️", "ch[eck]", ["d[eck]", "p[eck]"]],
+    elve_elves: ["🧝", "[elve]s", ["sh[elve]s", "tw[elve]"]],
+    ent_tent: ["⛺", "t[ent]", ["w[ent]", "s[ent]"]], ent_present: ["🎁", "pres[ent]", ["stud[ent]", "par[ent]"]],
+    ep_pepper: ["🌶️", "p[ep]per", ["st[ep]", "p[ep]"]],
+    est_nest: ["🪺", "n[est]", ["b[est]", "t[est]", "w[est]"]],
+    geo_geography: ["🗺️", "[geo]graphy", [], "earth"],
+    ichthy_fish: ["🐟", "fish", []],
+    iff_sniff: ["👃", "sn[iff]", ["st[iff]", "cl[iff]"]],
+    i_fish: ["🐟", "f[i]sh", ["s[i]t", "p[i]n", "b[i]g"]], i_kite: ["🪁", "k[i]te", ["t[i]me", "b[i]ke", "r[i]de"]],
+    ig_pig: ["🐷", "p[ig]", ["d[ig]", "w[ig]", "b[ig]"]],
+    il_pencil: ["✏️", "penc[il]", ["foss[il]"]],
+    ile_smile: ["😃", "sm[ile]", ["wh[ile]", "m[ile]", "p[ile]"]],
+    ing_ring: ["💍", "r[ing]", ["k[ing]", "s[ing]", "th[ing]"]],
+    ish_dish: ["🍽️", "d[ish]", ["w[ish]", "f[ish]"]],
+    ist_artist: ["🎨", "art[ist]", ["dent[ist]", "flor[ist]"], "a person who does it"],
+    iv_river: ["🏞️", "r[iv]er", ["g[iv]e", "l[iv]er"]], iv_five: ["5️⃣", "f[iv]e", ["h[iv]e", "d[iv]e"]],
+    izard_wizard: ["🧙", "w[izard]", []],
+    logy_biology: ["🧬", "bio[logy]", ["zoo[logy]"], "the study of"],
+    ly_friendly: ["🤝", "friend[ly]", ["love[ly]", "cudd[ly]"]],
+    oss_floss: ["🦷", "fl[oss]", ["b[oss]", "m[oss]"]],
+    other_mother: ["👩‍👧", "m[other]", ["an[other]", "br[other]"]],
+    ought_bought: ["🛍️", "b[ought]", ["br[ought]", "f[ought]"]],
+    out_shout: ["📣", "sh[out]", ["sc[out]", "[out]side", "ab[out]"]],
+    saur_dino: ["🦖", "dino[saur]", ["stego[saur]us"], "lizard"],
+    sci_scissors: ["✂️", "[sci]ssors", []], sci_science: ["🧪", "[sci]ence", []],
+    self_selfie: ["🤳", "[self]ie", ["my[self]", "your[self]"]],
+    th_thumb: ["👍", "[th]umb", ["[th]in", "ba[th]"]], th_feather: ["🪶", "fea[th]er", ["[th]is", "mo[th]er"]],
+    ton_button: ["🔘", "but[ton]", ["cot[ton]"]],
+    ug_bug: ["🐛", "b[ug]", ["m[ug]", "h[ug]", "r[ug]"]],
+    umb_thumb: ["👍", "th[umb]", ["n[umb]", "cr[umb]"]],
     a_apple: ["🍎", "[a]pple", ["c[a]t", "h[a]t", "m[a]p"]], a_baby: ["👶", "b[a]by", ["p[a]per", "t[a]ble", "l[a]dy"]],
     a_banana: ["🍌", "b[a]nana", ["[a]bout", "[a]go", "sof[a]"]],
     astro_astronaut: ["🧑‍🚀", "[astro]naut", ["[astro]nomy"], "star"],
@@ -109,7 +162,6 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     line_line: ["📏", "[line]", ["out[line]", "on[line]"]],
     land_landing: ["🛬", "[land]ing", ["is[land]", "Eng[land]", "[land]ed"]],
     man_man: ["👨", "[man]", ["[man]y"]], man_human: ["🧍", "hu[man]", ["wo[man]"]],
-    nom_nom: ["🍪", "[nom] nom", []],
     o_octopus: ["🐙", "[o]ctopus", ["h[o]t", "d[o]g", "st[o]p"]], o_ocean: ["🌊", "[o]cean", ["g[o]", "n[o]", "[o]pen"]],
     o_lemon: ["🍋", "lem[o]n", ["wag[o]n", "sec[o]nd"]],
     om_omelet: ["🍳", "[om]elet", ["m[om]", "T[om]"]], om_compass: ["🧭", "c[om]pass", ["c[om]fort", "c[om]pany"]],
@@ -130,7 +182,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     sure_sure: ["👍", "[sure]", []], sure_treasure: ["💎", "trea[sure]", ["plea[sure]"]],
     ter_water: ["💧", "wa[ter]", ["sis[ter]", "let[ter]", "but[ter]"]],
     ture_picture: ["🖼️", "pic[ture]", ["na[ture]", "fu[ture]", "adven[ture]"]],
-    ull_bull: ["🐂", "b[ull]", ["p[ull]", "f[ull]"]], ull_skull: ["💀", "sk[ull]", ["d[ull]", "g[ull]"]],
+    ull_bull: ["🐂", "b[ull]", ["p[ull]", "f[ull]"]], ull_dull: ["😑", "d[ull]", ["sk[ull]", "g[ull]"]],
     un_run: ["🏃", "r[un]", ["f[un]", "b[un]", "s[un]ny"]],
     y_puppy: ["🐶", "pupp[y]", ["happ[y]", "bab[y]", "funn[y]"]], y_fly: ["🪰", "fl[y]", ["m[y]", "cr[y]", "wh[y]"]],
     y_yoyo: ["🪀", "[y]o-yo", ["[y]es", "[y]ellow"]]
@@ -147,10 +199,55 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
   // A plural s is written "s:+" and an emoji for the thing: it shows two of them ("stars" shows two stars).
   // A past-tense ed is written "ed:<": it shows that the thing already happened.
   var WORDS = {
+    // Mary Anning's Sea Monsters
+    about: "a:a_apple,a_baby,a_banana* b out:out_shout",
+    anning: "a:a_apple*,a_baby,a_banana nn ing:ing_ring",
+    became: "be:be_bee c:c_cat*,c_pencil ame:ame_game",
+    best: "b est:est_nest",
+    big: "b ig:ig_pig",
+    brother: "br other:other_mother",
+    called: "c:c_cat*,c_pencil all:all_ball ed:<",
+    cliffs: "cl iff:iff_sniff s:+🏔️",
+    creature: "cr ea:ea_peach*,ea_bread,ea_steak ture:ture_picture",
+    crumbly: "cr umb:umb_thumb ly:ly_friendly",
+    discovered: "dis:dis_disappear cover:cover_cover ed:<",
+    dug: "d ug:ug_bug",
+    fake: "f ake:ake_cake",
+    fish: "f ish:ish_dish",
+    fossil: "f oss:oss_floss il:il_pencil",
+    fossils: "f oss:oss_floss il:il_pencil s:+🦴",
+    geology: "geo:geo_geography logy:logy_biology",
+    giant: "g:g_giraffe*,g_goat i:i_fish,i_kite* ant:ant_ant,ant_elephant*",
+    head: "h ea:ea_peach,ea_bread*,ea_steak d",
+    herself: "her:her_her self:self_selfie",
+    hunters: "h un:un_run t er:er_sunflower,er_teacher* s:+🏹",
+    ichthyosaur: "ichthy:ichthy_fish o:o_octopus,o_ocean*,o_lemon saur:saur_dino",
+    later: "l a:a_apple,a_baby*,a_banana ter:ter_water",
+    lived: "l iv:iv_river*,iv_five ed:<",
+    lizard: "l izard:izard_wizard",
+    long: "l ong:ong_song",
+    mary: "m ar:ar_car,ar_parrot* y:y_puppy*,y_fly,y_yoyo",
+    means: "m ea:ea_peach*,ea_bread,ea_steak n s:s_snake,s_rose*",
+    neck: "n eck:eck_check",
+    reptile: "r ep:ep_pepper t ile:ile_smile",
+    rest: "r est:est_nest",
+    scientists: "sci:sci_scissors,sci_science* ent:ent_tent,ent_present* ist:ist_artist s:+🧑‍🔬",
+    sea: "s:s_snake*,s_rose ea:ea_peach*,ea_bread,ea_steak",
+    searched: "s:s_snake*,s_rose ear:ear_ear,ear_bear,ear_earth* ch:ch_cheese*,ch_school,ch_chef ed:<",
+    skeleton: "sk el:el_elephant*,el_camel e:e_egg,e_zebra,e_chicken* ton:ton_button",
+    skull: "sk ull:ull_bull,ull_dull*",
+    storms: "st or:or_corn*,or_doctor m s:+⛈️",
+    taught: "t aught:aught_caught",
+    thought: "th:th_thumb*,th_feather ought:ought_bought",
+    tiny: "t i:i_fish,i_kite* n y:y_puppy*,y_fly,y_yoyo",
+    twelve: "tw elve:elve_elves",
+    world: "w or:or_corn,or_doctor* ld",
+
+    // Caroline Herschel's Comets
     after: "af:af_giraffe ter:ter_water",
     along: "a:a_apple,a_baby,a_banana* l ong:ong_song",
     around: "a:a_apple,a_baby,a_banana* round:round_round",
-    astronomer: "astro:astro_astronaut nom:nom_nom er:er_sunflower,er_teacher*",
+    astronomer: "astro:astro_astronaut nom:om_omelet,om_compass* er:er_sunflower,er_teacher*",
     caroline: "car:car_car o:o_octopus,o_ocean,o_lemon* line:line_line",
     comet: "c:c_cat*,c_pencil om:om_omelet*,om_compass et:et_rocket*,et_ballet",
     comets: "c:c_cat*,c_pencil om:om_omelet*,om_compass et:et_rocket*,et_ballet s:+☄️",
@@ -159,7 +256,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     england: "eng:eng_engine,!eng_ring land:land_landing",
     first: "f ir:ir_bird st",
     found: "f ound:ound_sound",
-    full: "f ull:ull_bull*,ull_skull",
+    full: "f ull:ull_bull*,ull_dull",
     germany: "g:g_giraffe*,g_goat er:er_sunflower man:man_man,man_human* y:y_puppy*,y_fly,y_yoyo",
     grew: "gr ew:ew_screw*,ew_sew",
     herschel: "her:her_her sch:sch_school,!sch_sheep el:el_elephant,el_camel*",
@@ -180,12 +277,22 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     telescope: "tele:tele_tv scope:scope_microscope"
   };
   // Sight words: common words that are learned by sight rather than sounded out.
-  var SIGHT = "a an and all could her in is its of on one she so the to up was which with".split(" ");
+  // Names: a capital letter at the start tells you the word is a name.
+  var NAMES = "anning caroline england germany herschel mary sun".split(" ");
+  var SIGHT = "a an and all by could for her in is it its of on one out she so some the to up very was when which with".split(" ");
 
-  var TEXT = "Caroline Herschel was an astronomer. She grew up in Germany and moved to England, which is on an island. " +
-    "She learned math so she could measure the stars. Night after night, she swept the sky with her telescope. " +
-    "In 1786, she found her first comet. Nature was full of surprises, and she found eight comets in all! " +
-    "Each one moved along its own orbit around the Sun.";
+  var STORIES = [
+    { title: "Caroline Herschel's Comets", icon: "☄️",
+      text: "Caroline Herschel was an astronomer. She grew up in Germany and moved to England, which is on an island. " +
+        "She learned math so she could measure the stars. Night after night, she swept the sky with her telescope. " +
+        "In 1786, she found her first comet. Nature was full of surprises, and she found eight comets in all! " +
+        "Each one moved along its own orbit around the Sun." },
+    { title: "Mary Anning's Sea Monsters", icon: "🦕",
+      text: "Mary Anning lived by the sea in England. After big storms, she searched the crumbly cliffs for fossils. " +
+        "When Mary was about twelve, her brother found the skull of a giant sea reptile. Mary dug out the rest of its skeleton. " +
+        "It was called an ichthyosaur, which means \"fish lizard.\" Later, she discovered a creature with a tiny head and a very long neck. " +
+        "Some scientists thought it was a fake! Mary taught herself geology and became one of the best fossil hunters in the world." }
+  ];
 
   var $ = function (id) { return document.getElementById(id); };
   var POP = "cubic-bezier(.34,1.56,.64,1)", GLIDE = "cubic-bezier(.2,.8,.3,1)";
@@ -224,15 +331,31 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     return a;
   }
 
-  // ---- The story page: every word is tappable (numbers aren't) ----
-  TEXT.split(/([A-Za-z']+)/).forEach(function (part, i) {
-    if (i % 2) {
-      var s = document.createElement("span");
-      s.className = "w"; s.textContent = part;
-      s.addEventListener("click", function () { open(s, part); });
-      $("text").appendChild(s);
-    } else if (part) $("text").appendChild(document.createTextNode(part));
+  // ---- Home: a tile for each story ----
+  STORIES.forEach(function (st, n) {
+    var b = document.createElement("button");
+    b.className = "storytile";
+    b.innerHTML = '<span class="si">' + st.icon + "</span><span>" + st.title + "</span>";
+    b.addEventListener("click", function () { show(n); });
+    $("tiles").appendChild(b);
   });
+  $("back").addEventListener("click", function () { $("story").hidden = true; $("home").hidden = false; window.scrollTo(0, 0); });
+
+  // ---- A story page: every word is tappable (numbers aren't) ----
+  function show(n) {
+    var st = STORIES[n];
+    $("title").textContent = st.title;
+    $("text").textContent = "";
+    st.text.split(/([A-Za-z']+)/).forEach(function (part, i) {
+      if (i % 2) {
+        var s = document.createElement("span");
+        s.className = "w"; s.textContent = part;
+        s.addEventListener("click", function () { open(s, part); });
+        $("text").appendChild(s);
+      } else if (part) $("text").appendChild(document.createTextNode(part));
+    });
+    $("home").hidden = true; $("story").hidden = false; window.scrollTo(0, 0);
+  }
   Object.keys(WORDS).forEach(function (k) { // catch typos in the word list
     parse(WORDS[k], k).forEach(function (c) { c.o.concat(c.ok ? [c.ok] : []).forEach(function (id) { if (!SOUNDS[id]) console.warn("No icon", id, "in", k); }); });
     if (parse(WORDS[k], k).map(function (c) { return c.t; }).join("") !== k) console.warn("Chunks don't spell", k);
@@ -275,6 +398,15 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
       row.appendChild(col);
       tiles.push(tile); cols.push({ col: col, c: c });
     });
+    var notes = document.createElement("div");
+    notes.className = "notes";
+    row.appendChild(notes);
+    if (NAMES.indexOf(key) >= 0 && word.charAt(0) !== key.charAt(0)) {
+      tiles[0].innerHTML = '<span class="cap">' + tiles[0].textContent.charAt(0) + "</span>" + tiles[0].textContent.slice(1);
+      var nm = document.createElement("div");
+      nm.className = "note"; nm.textContent = "🏷️ Capital letter: it's a name!";
+      notes.appendChild(nm);
+    }
     if (sight) {
       var lbl = document.createElement("div");
       lbl.className = "label"; lbl.textContent = "👀 Sight word";
@@ -315,6 +447,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     } else {
       lbl.animate([{ opacity: 0, transform: "scale(0.5)" }, { opacity: 1, transform: "none" }], { duration: 380, delay: HOLD, easing: POP, fill: "backwards" });
     }
+    if (nm) nm.animate([{ opacity: 0, transform: "scale(0.5)" }, { opacity: 1, transform: "none" }], { duration: 380, delay: HOLD, easing: POP, fill: "backwards" });
     cur.ready = Date.now() + HOLD + (sight ? 300 : SPLIT + 300);
 
     focus.addEventListener("click", function () { advance(); });
@@ -384,8 +517,8 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
       if (tricky) {
         var n = document.createElement("div");
         n.className = "note"; n.textContent = "Tricky one!";
-        c.row.appendChild(n);
-        n.animate([{ opacity: 0, transform: "translateX(-50%) scale(0.5)" }, { opacity: 1, transform: "translateX(-50%)" }], { duration: 380, delay: 200, easing: POP, fill: "backwards" });
+        c.row.querySelector(".notes").appendChild(n);
+        n.animate([{ opacity: 0, transform: "scale(0.5)" }, { opacity: 1, transform: "none" }], { duration: 380, delay: 200, easing: POP, fill: "backwards" });
       }
     }, 230);
   }
@@ -397,7 +530,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     c.closing = true;
     c.focus.getAnimations({ subtree: true }).forEach(function (a) { a.finish(); });
     var g = joinGeometry();
-    each(c.row.querySelectorAll(".opts, .label, .note"), function (o) { o.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: "forwards" }); });
+    each(c.row.querySelectorAll(".opts, .label, .notes"), function (o) { o.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: "forwards" }); });
     c.row.classList.add("joined");
     c.tiles.forEach(function (t, i) {
       t.animate([{ transform: "translateX(0px)" }, { transform: "translateX(" + g.dx[i] + "px)" }], { duration: 280, delay: 120, easing: "ease-in-out", fill: "forwards" });
