@@ -36,6 +36,9 @@ button { font: inherit; color: inherit; cursor: pointer; border: none; backgroun
 [hidden] { display: none !important; }
 #story { max-width: 780px; margin: 0 auto; padding: max(28px, env(safe-area-inset-top)) 24px 40px; }
 h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw, 42px); margin: 0 0 18px; }
+#next { position: fixed; right: max(18px, env(safe-area-inset-right)); bottom: max(18px, env(safe-area-inset-bottom)); z-index: 5;
+  font-family: var(--display); font-weight: 600; font-size: 22px; padding: 12px 22px; background: var(--tile); border-radius: 999px; box-shadow: var(--shadow); }
+#story { padding-bottom: 110px; }
 #story p { font-size: clamp(24px, 3.5vw, 34px); line-height: 1.75; margin: 0; }
 .w { cursor: pointer; display: inline-block; transition: transform 0.12s; }
 .w:active { transform: scale(0.94); }
@@ -74,6 +77,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
   <h1 id="title"></h1>
   <p id="text"></p>
 </main>
+<button type="button" id="next">New story ↻</button>
 
 <script>
 (function () {
@@ -84,42 +88,86 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     all_ball: ["🏀", "b[all]", ["t[all]", "f[all]", "w[all]"]],
     ake_cake: ["🎂", "c[ake]", ["l[ake]", "sn[ake]", "m[ake]"]],
     ame_game: ["🎮", "g[ame]", ["n[ame]", "s[ame]", "fr[ame]"]],
-    ant_ant: ["🐜", "[ant]", ["pl[ant]", "p[ant]s"]], ant_elephant: ["🐘", "eleph[ant]", ["gi[ant]", "inst[ant]"]],
+    ant_ant: ["🐜", "[ant]", ["pl[ant]", "p[ant]s"]], ant_elephant: ["🐘", "eleph[ant]", ["import[ant]", "inst[ant]"]],
     ar_car: ["🚗", "c[ar]", ["f[ar]", "p[ar]k", "j[ar]"]], ar_parrot: ["🦜", "p[ar]rot", ["c[ar]rot", "[ar]row"]],
-    aught_caught: ["🎣", "c[aught]", ["d[aught]er", "t[aught]"]],
+    aught_caught: ["🎣", "c[aught]", ["d[aught]er", "n[aught]y"]],
     be_bee: ["🐝", "[be]e", ["[be]gin", "[be]fore"]],
     cover_cover: ["🛏️", "[cover]", ["re[cover]", "un[cover]"]],
-    dis_disappear: ["🫥", "[dis]appear", ["[dis]like", "[dis]agree"], "the opposite of"],
     eck_check: ["✔️", "ch[eck]", ["d[eck]", "p[eck]"]],
-    elve_elves: ["🧝", "[elve]s", ["sh[elve]s", "tw[elve]"]],
+    elve_elves: ["🧝🧝", "[elve]s", ["sh[elve]s", "tw[elve]"]],
     ent_tent: ["⛺", "t[ent]", ["w[ent]", "s[ent]"]], ent_present: ["🎁", "pres[ent]", ["stud[ent]", "par[ent]"]],
-    ep_pepper: ["🌶️", "p[ep]per", ["st[ep]", "p[ep]"]],
+    ep_pepper: ["🌶️", "p[ep]per", ["st[ep]", "k[ep]t"]],
     est_nest: ["🪺", "n[est]", ["b[est]", "t[est]", "w[est]"]],
-    geo_geography: ["🗺️", "[geo]graphy", [], "earth"],
-    ichthy_fish: ["🐟", "fish", []],
-    iff_sniff: ["👃", "sn[iff]", ["st[iff]", "cl[iff]"]],
     i_fish: ["🐟", "f[i]sh", ["s[i]t", "p[i]n", "b[i]g"]], i_kite: ["🪁", "k[i]te", ["t[i]me", "b[i]ke", "r[i]de"]],
     ig_pig: ["🐷", "p[ig]", ["d[ig]", "w[ig]", "b[ig]"]],
-    il_pencil: ["✏️", "penc[il]", ["foss[il]"]],
-    ile_smile: ["😃", "sm[ile]", ["wh[ile]", "m[ile]", "p[ile]"]],
+    il_pencil: ["✏️", "penc[il]", ["Apr[il]", "ev[il]"]],
     ing_ring: ["💍", "r[ing]", ["k[ing]", "s[ing]", "th[ing]"]],
-    ish_dish: ["🍽️", "d[ish]", ["w[ish]", "f[ish]"]],
-    ist_artist: ["🎨", "art[ist]", ["dent[ist]", "flor[ist]"], "a person who does it"],
-    iv_river: ["🏞️", "r[iv]er", ["g[iv]e", "l[iv]er"]], iv_five: ["5️⃣", "f[iv]e", ["h[iv]e", "d[iv]e"]],
+    ist_artist: ["🧑‍🎨", "art[ist]", ["dent[ist]", "pian[ist]"], "a person who does it"],
     izard_wizard: ["🧙", "w[izard]", []],
-    logy_biology: ["🧬", "bio[logy]", ["zoo[logy]"], "the study of"],
-    ly_friendly: ["🤝", "friend[ly]", ["love[ly]", "cudd[ly]"]],
+    ly_friendly: ["🧑‍🤝‍🧑", "friend[ly]", ["love[ly]", "cudd[ly]"]],
     oss_floss: ["🦷", "fl[oss]", ["b[oss]", "m[oss]"]],
-    other_mother: ["👩‍👧", "m[other]", ["an[other]", "br[other]"]],
+    other_mother: ["👩‍👧", "m[other]", ["an[other]", "sm[other]"]],
     ought_bought: ["🛍️", "b[ought]", ["br[ought]", "f[ought]"]],
     out_shout: ["📣", "sh[out]", ["sc[out]", "[out]side", "ab[out]"]],
     saur_dino: ["🦖", "dino[saur]", ["stego[saur]us"], "lizard"],
     sci_scissors: ["✂️", "[sci]ssors", []], sci_science: ["🧪", "[sci]ence", []],
     self_selfie: ["🤳", "[self]ie", ["my[self]", "your[self]"]],
     th_thumb: ["👍", "[th]umb", ["[th]in", "ba[th]"]], th_feather: ["🪶", "fea[th]er", ["[th]is", "mo[th]er"]],
-    ton_button: ["🔘", "but[ton]", ["cot[ton]"]],
-    ug_bug: ["🐛", "b[ug]", ["m[ug]", "h[ug]", "r[ug]"]],
-    umb_thumb: ["👍", "th[umb]", ["n[umb]", "cr[umb]"]],
+    ug_bug: ["🐞", "ladyb[ug]", ["m[ug]", "h[ug]", "r[ug]"]],
+    car_scary: ["😱", "s[car]y", ["s[car]ed", "[Car]ol"]],
+    ichthyo_fish: ["🐟", "fish", []],
+    um_drum: ["🥁", "dr[um]", ["pl[um]", "g[um]", "h[um]"]],
+    ov_movie: ["🎬", "m[ov]ie", ["pr[ov]e", "rem[ov]e"]],
+    call_phone: ["📞", "[call]", ["[call]ing", "re[call]"]],
+    learn_books: ["📚", "[learn]", ["[learn]ing"]],
+    hunt_bow: ["🏹", "[hunt]", ["[hunt]ing"]],
+    storm_storm: ["⛈️", "[storm]", ["[storm]y"]],
+    geo_earth: ["🌎", "earth", []],
+    logy_study: ["🔍", "study of", ["zoo[logy]"]],
+    dis_dislike: ["👎", "[dis]like", ["[dis]agree", "[dis]appear"], "the opposite of"],
+    ew_stew: ["🍲", "st[ew]", ["n[ew]", "ch[ew]", "fl[ew]"]],
+    ton_carton: ["📦", "car[ton]", ["cot[ton]", "but[ton]"]],
+    ile_crocodile: ["🐊", "crocod[ile]", ["sm[ile]", "wh[ile]", "m[ile]"]],
+    ish_wish: ["🌠", "w[ish]", ["d[ish]", "sw[ish]"]],
+    eigh_sleigh: ["🛷", "sl[eigh]", ["w[eigh]", "n[eigh]"]],
+    ov_glove: ["🧤", "gl[ov]e", ["l[ov]e", "ab[ov]e", "[ov]en"]],
+    om_bomb: ["💣", "b[om]b", ["m[om]", "T[om]"]],
+    om_computer: ["💻", "c[om]puter", ["c[om]fort", "c[om]pany"]],
+    u_cupcake: ["🧁", "c[u]pcake", ["s[u]n", "c[u]p", "b[u]g"]],
+    i_puppies: ["🐶🐶", "pupp[i]es", ["bab[i]es", "bunn[i]es"]],
+    bird_bird: ["🐦", "[bird]", ["[bird]house"]],
+    fly_fly: ["🪰", "[fly]", ["butter[fly]", "dragon[fly]"]],
+    ing_doing: ["🏃‍♀️", "runn[ing]", ["jump[ing]", "sing[ing]"], "happening now"],
+    ade_lemonade: ["🧃", "lemon[ade]", ["f[ade]", "sh[ade]", "m[ade]"]],
+    an_van: ["🚐", "v[an]", ["c[an]", "m[an]", "f[an]"]],
+    et_net: ["🥅", "n[et]", ["w[et]", "p[et]", "g[et]"]],
+    in_pin: ["📌", "p[in]", ["w[in]", "t[in]", "sk[in]"]],
+    or_actor: ["🎭", "act[or]", ["doct[or]", "sail[or]"], "a person who does it"],
+    am_ham: ["🍖", "h[am]", ["j[am]", "c[am]p", "cl[am]"]],
+    am_flame: ["🔥", "fl[am]e", ["n[am]e", "g[am]e", "s[am]e"]],
+    abb_rabbit: ["🐰", "r[abb]it", ["c[abb]age"]],
+    age_page: ["📄", "p[age]", ["c[age]", "st[age]"]],
+    age_cabbage: ["🥬", "cabb[age]", ["pack[age]", "vill[age]"]],
+    ol_dolphin: ["🐬", "d[ol]phin", ["s[ol]id", "[ol]ive"]],
+    ol_old: ["👴", "[ol]d", ["c[ol]d", "g[ol]d", "h[ol]d"]],
+    ow_cow: ["🐄", "c[ow]", ["n[ow]", "h[ow]", "d[ow]n"]],
+    ow_snow: ["❄️", "sn[ow]", ["sl[ow]", "gr[ow]", "yell[ow]"]],
+    ote_note: ["🎵", "n[ote]", ["v[ote]", "qu[ote]"]],
+    stud_study: ["📖", "[stud]y", ["[stud]ent"]],
+    ven_seven: ["7️⃣", "se[ven]", ["o[ven]", "ele[ven]"]],
+    ag_bag: ["🎒", "b[ag]", ["fl[ag]", "t[ag]", "w[ag]"]],
+    ag_magic: ["🪄", "m[ag]ic", ["im[ag]ine", "m[ag]ical"]],
+    im_swim: ["🏊", "sw[im]", ["h[im]", "d[im]", "[im]portant"]],
+    ike_bike: ["🚲", "b[ike]", ["h[ike]", "l[ike]", "str[ike]"]],
+    ay_crayon: ["🖍️", "cr[ay]on", ["pl[ay]", "st[ay]", "s[ay]"]],
+    ic_magic: ["🪄", "mag[ic]", ["p[ic]nic", "com[ic]"]],
+    u_unicorn: ["🦄", "[u]nicorn", ["m[u]sic", "c[u]te", "[u]se"]],
+    ob_lobster: ["🦞", "l[ob]ster", ["j[ob]", "r[ob]in", "kn[ob]"]],
+    lem_lemon: ["🍋", "[lem]on", ["prob[lem]"]],
+    lov_love: ["❤️", "[lov]e", ["g[lov]e", "[lov]ely"]],
+    love_heart: ["❤️", "[love]", ["g[love]", "[love]ly"]],
+    lace_shoelace: ["👟", "shoe[lace]", ["p[lace]", "neck[lace]"]],
+    ine_queen: ["👸", "queen", ["magaz[ine]", "sard[ine]"]],
     a_apple: ["🍎", "[a]pple", ["c[a]t", "h[a]t", "m[a]p"]], a_baby: ["👶", "b[a]by", ["p[a]per", "t[a]ble", "l[a]dy"]],
     a_banana: ["🍌", "b[a]nana", ["[a]bout", "[a]go", "sof[a]"]],
     astro_astronaut: ["🧑‍🚀", "[astro]naut", ["[astro]nomy"], "star"],
@@ -131,51 +179,47 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     ch_cheese: ["🧀", "[ch]eese", ["[ch]in", "mu[ch]", "lun[ch]"]], ch_school: ["🏫", "s[ch]ool", ["e[ch]o"]], ch_chef: ["👨‍🍳", "[ch]ef", ["ma[ch]ine"]],
     e_egg: ["🥚", "[e]gg", ["b[e]d", "r[e]d", "t[e]n"]], e_zebra: ["🦓", "z[e]bra", ["m[e]", "b[e]", "h[e]"]],
     e_chicken: ["🐔", "chick[e]n", ["kitt[e]n", "op[e]n", "sev[e]n"]], e_fish: ["🐟", "f[i]sh", []],
-    ea_peach: ["🍑", "p[ea]ch", ["[ea]t", "s[ea]", "r[ea]d"]], ea_bread: ["🍞", "br[ea]d", ["h[ea]d", "r[ea]dy", "f[ea]ther"]],
+    ea_peach: ["🍑", "p[ea]ch", ["[ea]t", "s[ea]", "b[ea]ch"]], ea_bread: ["🍞", "br[ea]d", ["h[ea]d", "r[ea]dy", "f[ea]ther"]],
     ea_steak: ["🥩", "st[ea]k", ["gr[ea]t", "br[ea]k"]],
     ear_ear: ["👂", "[ear]", ["h[ear]", "n[ear]", "d[ear]"]], ear_bear: ["🐻", "b[ear]", ["p[ear]", "w[ear]"]],
     ear_earth: ["🌍", "[ear]th", ["l[ear]n", "[ear]ly", "h[ear]d"]],
-    eng_engine: ["🚒", "[eng]ine", []], eng_ring: ["💍", "r[ing]", []],
-    eigh_neigh: ["🐴", "n[eigh]", ["w[eigh]", "sl[eigh]"]], eigh_height: ["📏", "h[eigh]t", []],
+    eng_engine: ["🚂", "[eng]ine", []], eng_ring: ["💍", "ring", ["[Eng]lish"]],
+    eigh_height: ["📏", "h[eigh]t", []],
     el_elephant: ["🐘", "[el]ephant", ["h[el]p", "[el]bow"]], el_camel: ["🐫", "cam[el]", ["trav[el]", "tow[el]", "lab[el]"]],
     ept_slept: ["😴", "sl[ept]", ["k[ept]", "cr[ept]", "w[ept]"]],
     er_sunflower: ["🌻", "sunflow[er]", ["sist[er]", "wat[er]", "h[er]"]],
     er_teacher: ["🧑‍🏫", "teach[er]", ["farm[er]", "paint[er]", "bak[er]"], "a person who does it"],
     et_rocket: ["🚀", "rock[et]", ["pock[et]", "jack[et]", "plan[et]"]], et_ballet: ["🩰", "ball[et]", []],
-    ew_screw: ["🔩", "scr[ew]", ["n[ew]", "ch[ew]", "fl[ew]"]], ew_sew: ["🪡", "s[ew]", []],
-    her_her: ["👩", "[her]", ["[her]d"]],
+    ew_sew: ["🪡", "s[ew]", []],
     g_giraffe: ["🦒", "[g]iraffe", ["[g]em", "[g]iant", "pa[g]e"]], g_goat: ["🐐", "[g]oat", ["[g]o", "bi[g]", "[g]ame"]],
     ight_light: ["💡", "l[ight]", ["r[ight]", "br[ight]", "s[ight]"]],
-    ine_pine: ["🌲", "p[ine]", ["l[ine]", "n[ine]", "f[ine]"]], ine_engine: ["🚒", "eng[ine]", ["imag[ine]"]],
+    ine_pine: ["🌲", "p[ine]", ["l[ine]", "n[ine]", "f[ine]"]], ine_engine: ["🚂", "eng[ine]", ["imag[ine]"]],
     ir_bird: ["🐦", "b[ir]d", ["g[ir]l", "sh[ir]t", "d[ir]t"]],
-    is_kiss: ["💋", "k[is]s", ["th[is]", "m[is]s"]], is_list: ["📝", "l[is]t", ["f[is]t", "m[is]t"]], is_eye: ["👁️", "[eye]", []],
+    is_kiss: ["😘", "k[is]s", ["th[is]", "m[is]s"]], is_eye: ["👁️", "eye", []],
     ise_sunrise: ["🌅", "sunr[ise]", ["r[ise]", "w[ise]", "surpr[ise]"]],
-    line_line: ["📏", "[line]", ["out[line]", "on[line]"]],
     land_landing: ["🛬", "[land]ing", ["is[land]", "Eng[land]", "[land]ed"]],
     man_man: ["👨", "[man]", ["[man]y"]], man_human: ["🧍", "hu[man]", ["wo[man]"]],
     o_octopus: ["🐙", "[o]ctopus", ["h[o]t", "d[o]g", "st[o]p"]], o_ocean: ["🌊", "[o]cean", ["g[o]", "n[o]", "[o]pen"]],
     o_lemon: ["🍋", "lem[o]n", ["wag[o]n", "sec[o]nd"]],
-    om_omelet: ["🍳", "[om]elet", ["m[om]", "T[om]"]], om_compass: ["🧭", "c[om]pass", ["c[om]fort", "c[om]pany"]],
     on_bonfire: ["🔥", "b[on]fire", ["p[on]d", "m[on]ster"]], on_onion: ["🧅", "[on]ion", ["s[on]", "w[on]der"]],
-    ong_song: ["🎶", "s[ong]", ["l[ong]", "str[ong]", "wr[ong]"]],
+    ong_song: ["🏓", "ping p[ong]", ["l[ong]", "s[ong]", "str[ong]"]],
     or_corn: ["🌽", "c[or]n", ["f[or]", "h[or]se", "f[or]k"]], or_doctor: ["🧑‍⚕️", "doct[or]", ["act[or]", "col[or]"]],
     ound_sound: ["🔊", "s[ound]", ["r[ound]", "gr[ound]", "f[ound]"]],
-    ov_love: ["❤️", "l[ov]e", ["gl[ov]e", "ab[ov]e", "[ov]en"]], ov_clover: ["🍀", "cl[ov]er", ["[ov]er", "st[ov]e"]],
-    ov_groove: ["🕺", "gr[oov]e", ["pr[ov]e", "rem[ov]e", "m[ov]ie"]],
+    ov_clover: ["🍀", "cl[ov]er", ["[ov]er", "st[ov]e"]],
     own_crown: ["👑", "cr[own]", ["d[own]", "t[own]", "cl[own]"]], own_blown: ["🌬️", "bl[own]", ["gr[own]", "sh[own]", "thr[own]"]],
-    round_round: ["⭕", "[round]", ["g[round]", "a[round]"]],
+    round_round: ["🎠", "merry-go-[round]", ["g[round]", "a[round]"]],
     star_star: ["⭐", "[star]", ["[star]t", "[star]fish"]],
     s_snake: ["🐍", "[s]nake", ["[s]it", "bu[s]", "ye[s]"]], s_rose: ["🌹", "ro[s]e", ["i[s]", "ha[s]", "dog[s]"]],
-    sch_school: ["🏫", "[sch]ool", []], sch_sheep: ["🐑", "[sh]eep", []],
+    sch_school: ["🏫", "[sch]ool", []], sch_sheep: ["🐑", "sheep", []],
     scope_microscope: ["🔬", "micro[scope]", ["peri[scope]"], "look at"],
     tele_tv: ["📺", "[tele]vision", ["[tele]phone"], "far away"],
-    sur_surf: ["🏄", "[sur]f", ["[sur]prise"]],
-    sure_sure: ["👍", "[sure]", []], sure_treasure: ["💎", "trea[sure]", ["plea[sure]"]],
+    sur_surf: ["🏄", "[sur]f", ["[sur]face"]],
+    sure_treasure: ["💎", "trea[sure]", ["plea[sure]"]],
     ter_water: ["💧", "wa[ter]", ["sis[ter]", "let[ter]", "but[ter]"]],
     ture_picture: ["🖼️", "pic[ture]", ["na[ture]", "fu[ture]", "adven[ture]"]],
-    ull_bull: ["🐂", "b[ull]", ["p[ull]", "f[ull]"]], ull_dull: ["😑", "d[ull]", ["sk[ull]", "g[ull]"]],
-    un_run: ["🏃", "r[un]", ["f[un]", "b[un]", "s[un]ny"]],
-    y_puppy: ["🐶", "pupp[y]", ["happ[y]", "bab[y]", "funn[y]"]], y_fly: ["🪰", "fl[y]", ["m[y]", "cr[y]", "wh[y]"]],
+    ull_bull: ["🐂", "b[ull]", ["p[ull]", "f[ull]"]],
+    un_run: ["🏃", "r[un]", ["f[un]", "b[un]", "[un]der"]],
+    y_puppy: ["🐶", "pupp[y]", ["happ[y]", "bab[y]", "funn[y]"]], y_fly: ["😭", "cr[y]", ["m[y]", "wh[y]", "fl[y]"]],
     y_yoyo: ["🪀", "[y]o-yo", ["[y]es", "[y]ellow"]]
   };
 
@@ -190,6 +234,40 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
   // A plural s is written "s:+" and an emoji for the thing: it shows two of them ("stars" shows two stars).
   // A past-tense ed is written "ed:<": it shows that the thing already happened.
   var WORDS = {
+    // Ada Lovelace's Thinking Machine
+    ada: "a:a_apple,a_baby*,a_banana d a:a_apple,a_baby,a_banana*",
+    babbage: "b abb:abb_rabbit age:age_page,age_cabbage*",
+    birds: "bird:bird_bird s:+🐦",
+    call: "call:call_phone",
+    charles: "ch:ch_cheese*,ch_school,ch_chef ar:ar_car*,ar_parrot les",
+    computer: "com:om_bomb,om_computer* p u:u_cupcake,u_unicorn* t er:er_sunflower",
+    day: "d ay:ay_crayon",
+    even: "e:e_egg,e_zebra* ven:ven_seven",
+    fly: "fl y:y_puppy,y_fly*,y_yoyo",
+    flying: "fly:fly_fly ing:ing_doing",
+    follow: "f ol:ol_dolphin*,ol_old l ow:ow_cow,ow_snow*",
+    gears: "g:g_giraffe,g_goat* ear:ear_ear*,ear_bear,ear_earth s:+⚙️",
+    imagined: "im:im_swim ag:ag_bag,ag_magic* in:in_pin ed:<",
+    inventor: "in:in_pin v ent:ent_tent*,ent_present or:or_corn,or_actor*",
+    like: "l ike:ike_bike",
+    loved: "lov:lov_love ed:<",
+    lovelace: "love:love_heart lace:lace_shoelace",
+    make: "m ake:ake_cake",
+    machine: "m a:a_apple,a_baby,a_banana* ch:ch_cheese,ch_school,ch_chef* ine:ine_pine,ine_engine,!ine_queen",
+    machines: "m a:a_apple,a_baby,a_banana* ch:ch_cheese,ch_school,ch_chef* ine:ine_pine,ine_engine,!ine_queen s:+🤖",
+    made: "m ade:ade_lemonade",
+    met: "m et:et_net*,et_ballet",
+    music: "m u:u_cupcake,u_unicorn* s:s_snake,s_rose* ic:ic_magic",
+    named: "n am:am_ham,am_flame* ed:<",
+    planning: "pl an:an_van n ing:ing_doing",
+    plans: "pl an:an_van s:+📝",
+    problems: "pr ob:ob_lobster lem:lem_lemon s:+🧩",
+    program: "pr o:o_octopus,o_ocean*,o_lemon gr am:am_ham*,am_flame",
+    solve: "s:s_snake*,s_rose ol:ol_dolphin*,ol_old ve",
+    steps: "st ep:ep_pepper s:+👣",
+    studied: "stud:stud_study i:i_fish,i_kite,i_puppies* ed:<",
+    wrote: "wr ote:ote_note",
+
     // Mary Anning's Sea Monsters
     about: "a:a_apple,a_baby,a_banana* b out:out_shout",
     anning: "a:a_apple*,a_baby,a_banana nn ing:ing_ring",
@@ -197,37 +275,37 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     best: "b est:est_nest",
     big: "b ig:ig_pig",
     brother: "br other:other_mother",
-    called: "c:c_cat*,c_pencil all:all_ball ed:<",
-    cliffs: "cl iff:iff_sniff s:+🏔️",
+    called: "call:call_phone ed:<",
+    cliffs: "cl i:i_fish*,i_kite ff s:+🏔️",
     creature: "cr ea:ea_peach*,ea_bread,ea_steak ture:ture_picture",
-    crumbly: "cr umb:umb_thumb ly:ly_friendly",
-    discovered: "dis:dis_disappear cover:cover_cover ed:<",
+    crumbly: "cr um:um_drum b ly:ly_friendly",
+    discovered: "dis:dis_dislike cover:cover_cover ed:<",
     dug: "d ug:ug_bug",
     fake: "f ake:ake_cake",
-    fish: "f ish:ish_dish",
+    fish: "f ish:ish_wish",
     fossil: "f oss:oss_floss il:il_pencil",
     fossils: "f oss:oss_floss il:il_pencil s:+🦴",
-    geology: "geo:geo_geography logy:logy_biology",
+    geology: "geo:geo_earth logy:logy_study",
     giant: "g:g_giraffe*,g_goat i:i_fish,i_kite* ant:ant_ant,ant_elephant*",
     head: "h ea:ea_peach,ea_bread*,ea_steak d",
-    herself: "her:her_her self:self_selfie",
-    hunters: "h un:un_run t er:er_sunflower,er_teacher* s:+🏹",
-    ichthyosaur: "ichthy:ichthy_fish o:o_octopus,o_ocean*,o_lemon saur:saur_dino",
+    herself: "her self:self_selfie",
+    hunters: "hunt:hunt_bow er:er_sunflower,er_teacher* s:+🏹",
+    ichthyosaur: "ichthyo:ichthyo_fish saur:saur_dino",
     later: "l a:a_apple,a_baby*,a_banana ter:ter_water",
-    lived: "l iv:iv_river*,iv_five ed:<",
+    lived: "l i:i_fish*,i_kite v ed:<",
     lizard: "l izard:izard_wizard",
     long: "l ong:ong_song",
     mary: "m ar:ar_car,ar_parrot* y:y_puppy*,y_fly,y_yoyo",
     means: "m ea:ea_peach*,ea_bread,ea_steak n s:s_snake,s_rose*",
     neck: "n eck:eck_check",
-    reptile: "r ep:ep_pepper t ile:ile_smile",
+    reptile: "r ep:ep_pepper t ile:ile_crocodile",
     rest: "r est:est_nest",
     scientists: "sci:sci_scissors,sci_science* ent:ent_tent,ent_present* ist:ist_artist s:+🧑‍🔬",
     sea: "s:s_snake*,s_rose ea:ea_peach*,ea_bread,ea_steak",
     searched: "s:s_snake*,s_rose ear:ear_ear,ear_bear,ear_earth* ch:ch_cheese*,ch_school,ch_chef ed:<",
-    skeleton: "sk el:el_elephant*,el_camel e:e_egg,e_zebra,e_chicken* ton:ton_button",
-    skull: "sk ull:ull_bull,ull_dull*",
-    storms: "st or:or_corn*,or_doctor m s:+⛈️",
+    skeleton: "sk el:el_elephant*,el_camel e:e_egg,e_zebra,e_chicken* ton:ton_carton",
+    skull: "sk u:u_cupcake ll",
+    storms: "storm:storm_storm s:+⛈️",
     taught: "t aught:aught_caught",
     thought: "th:th_thumb*,th_feather ought:ought_bought",
     tiny: "t i:i_fish,i_kite* n y:y_puppy*,y_fly,y_yoyo",
@@ -238,24 +316,24 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     after: "af:af_giraffe ter:ter_water",
     along: "a:a_apple,a_baby,a_banana* l ong:ong_song",
     around: "a:a_apple,a_baby,a_banana* round:round_round",
-    astronomer: "astro:astro_astronaut nom:om_omelet,om_compass* er:er_sunflower,er_teacher*",
-    caroline: "car:car_car o:o_octopus,o_ocean,o_lemon* line:line_line",
-    comet: "c:c_cat*,c_pencil om:om_omelet*,om_compass et:et_rocket*,et_ballet",
-    comets: "c:c_cat*,c_pencil om:om_omelet*,om_compass et:et_rocket*,et_ballet s:+☄️",
+    astronomer: "astro:astro_astronaut nom:om_bomb,om_computer* er:er_sunflower,er_teacher*",
+    caroline: "car:car_car,car_scary* o:o_octopus,o_ocean,o_lemon* l ine:ine_pine*,ine_engine",
+    comet: "c:c_cat*,c_pencil om:om_bomb*,om_computer et:et_rocket*,et_ballet",
+    comets: "c:c_cat*,c_pencil om:om_bomb*,om_computer et:et_rocket*,et_ballet s:+☄️",
     each: "ea:ea_peach*,ea_bread,ea_steak ch:ch_cheese*,ch_school,ch_chef",
-    eight: "eigh:eigh_neigh*,eigh_height t",
+    eight: "eigh:eigh_sleigh*,eigh_height t",
     england: "eng:eng_engine,!eng_ring land:land_landing",
     first: "f ir:ir_bird st",
     found: "f ound:ound_sound",
-    full: "f ull:ull_bull*,ull_dull",
+    full: "f ull:ull_bull",
     germany: "g:g_giraffe*,g_goat er:er_sunflower man:man_man,man_human* y:y_puppy*,y_fly,y_yoyo",
-    grew: "gr ew:ew_screw*,ew_sew",
-    herschel: "her:her_her sch:sch_school,!sch_sheep el:el_elephant,el_camel*",
-    island: "is:is_kiss,is_list,!is_eye land:land_landing",
-    learned: "l ear:ear_ear,ear_bear,ear_earth* n ed:<",
+    grew: "gr ew:ew_stew*,ew_sew",
+    herschel: "her sch:sch_school,!sch_sheep el:el_elephant,el_camel*",
+    island: "is:is_kiss,!is_eye land:land_landing",
+    learned: "learn:learn_books ed:<",
     math: "m ath:ath_bath",
-    measure: "m ea:ea_peach,ea_bread*,ea_steak sure:sure_sure,sure_treasure*",
-    moved: "m ov:ov_love,ov_clover,!ov_groove ed:<",
+    measure: "m ea:ea_peach,ea_bread*,ea_steak sure:sure_treasure",
+    moved: "m ov:ov_glove,ov_clover,!ov_movie ed:<",
     nature: "n a:a_apple,a_baby*,a_banana ture:ture_picture",
     night: "n ight:ight_light",
     orbit: "or:or_corn*,or_doctor bit:bit_rabbit",
@@ -271,8 +349,8 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
   // Words whose clearest explanation is a picture of what they mean, shown after the word at the reveal.
   var ANSWERS = { eight: "8" };
   // Names: a capital letter at the start tells you the word is a name.
-  var NAMES = "anning caroline england germany herschel mary sun".split(" ");
-  var SIGHT = "a an and all by could for her in is it its of on one out she so some the to up very was when which with".split(" ");
+  var NAMES = "ada anning babbage caroline charles england germany herschel lovelace mary sun".split(" ");
+  var SIGHT = "a an and all by could for he her how in is it its many of on one out people she so some that the this to up very was when which with".split(" ");
 
   var STORIES = [
     { title: "Caroline Herschel's Comets",
@@ -284,7 +362,12 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
       text: "Mary Anning lived by the sea in England. After big storms, she searched the crumbly cliffs for fossils. " +
         "When Mary was about twelve, her brother found the skull of a giant sea reptile. Mary dug out the rest of its skeleton. " +
         "It was called an ichthyosaur, which means \"fish lizard.\" Later, she discovered a creature with a tiny head and a very long neck. " +
-        "Some scientists thought it was a fake! Mary taught herself geology and became one of the best fossil hunters in the world." }
+        "Some scientists thought it was a fake! Mary taught herself geology and became one of the best fossil hunters in the world." },
+    { title: "Ada Lovelace's Thinking Machine",
+      text: "Ada Lovelace loved math and machines. When she was twelve, she studied how birds fly and made plans for a flying machine. " +
+        "Later, she met an inventor named Charles Babbage. He was planning a giant machine made of gears that could solve math problems. " +
+        "Ada wrote steps for the machine to follow. Many people call this the first computer program! " +
+        "Ada even imagined that machines like this could one day make music." }
   ];
 
   var $ = function (id) { return document.getElementById(id); };
@@ -339,13 +422,18 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
       } else if (part) $("text").appendChild(document.createTextNode(part));
     });
   }
-  // The app picks the story: a random one, not the same as last time.
+  // The app picks the story: a random one, never the one just read. The button picks another.
   var last = -1;
   try { last = +localStorage.getItem("lastStory"); } catch (e) {}
-  var pick = Math.floor(Math.random() * STORIES.length);
-  if (STORIES.length > 1 && pick === last) pick = (pick + 1) % STORIES.length;
-  try { localStorage.setItem("lastStory", pick); } catch (e) {}
-  show(pick);
+  function newStory() {
+    var pick = Math.floor(Math.random() * STORIES.length);
+    if (STORIES.length > 1 && pick === last) pick = (pick + 1 + Math.floor(Math.random() * (STORIES.length - 1))) % STORIES.length;
+    last = pick;
+    try { localStorage.setItem("lastStory", pick); } catch (e) {}
+    show(pick);
+  }
+  $("next").addEventListener("click", newStory);
+  newStory();
   Object.keys(WORDS).forEach(function (k) { // catch typos in the word list
     parse(WORDS[k], k).forEach(function (c) { c.o.concat(c.ok ? [c.ok] : []).forEach(function (id) { if (!SOUNDS[id]) console.warn("No icon", id, "in", k); }); });
     if (parse(WORDS[k], k).map(function (c) { return c.t; }).join("") !== k) console.warn("Chunks don't spell", k);
