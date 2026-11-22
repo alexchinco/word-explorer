@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Word Explorer">
+<title>Word Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Andika is made for beginning readers: single-story a and g, clear letter shapes. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Fredoka:wght@600;700&display=swap">
+<style>
+/* A story page where every word can be tapped. A sight word just grows and gets a label.
+   Any other word grows, splits into pattern chunks with icons for every sound each chunk might make;
+   the next tap keeps only the right icons and adds example words; the last tap sends it home.
+   Deliberately single (light) theme, matching Equation Hunt. */
+:root {
+  --sky: #FCE4EC;
+  --ink: #1E2B4A;
+  --muted: #5D6E8C;
+  --tile: #FFFFFF;
+  --hi: #D6336C;      /* the letters in a keyword or example that match the chunk */
+  --shadow: 0 2px 4px rgba(30, 43, 74, 0.18);
+  --read: "Andika", system-ui, sans-serif;
+  --display: "Fredoka", system-ui, sans-serif;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--sky); color: var(--ink); font-family: var(--read); touch-action: manipulation;
+  -webkit-user-select: none; user-select: none; }
+button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; padding: 0; }
+
+/* The story */
+#story { max-width: 780px; margin: 0 auto; padding: max(28px, env(safe-area-inset-top)) 24px 40px; }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw, 42px); margin: 0 0 18px; }
+#story p { font-size: clamp(24px, 3.5vw, 34px); line-height: 1.75; margin: 0; }
+.w { cursor: pointer; display: inline-block; transition: transform 0.12s; }
+.w:active { transform: scale(0.94); }
+.w.away { visibility: hidden; }
+
+/* The word screen */
+#focus { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; }
+#focus .veil { position: absolute; inset: 0; background: rgba(252, 228, 236, 0.95); }
+#focus .close { position: absolute; top: max(14px, env(safe-area-inset-top)); right: 16px; width: 54px; height: 54px; border-radius: 50%;
+  background: var(--tile); box-shadow: var(--shadow); font-family: var(--display); font-size: 30px; line-height: 54px; text-align: center; }
+.row { position: relative; display: flex; align-items: flex-start; width: max-content; gap: calc(var(--f) * 0.14); }
+.col { display: flex; flex-direction: column; align-items: center; gap: calc(var(--f) * 0.16); }
+.chunk { font-weight: 700; font-size: var(--f); line-height: 1.15; padding: 0.06em 0.16em 0.1em; text-align: center;
+  background: var(--tile); border-radius: 0.18em; box-shadow: var(--shadow); transition: background 0.3s, box-shadow 0.3s; }
+.joined .chunk { background: transparent; box-shadow: none; }
+.opts { display: flex; flex-direction: column; align-items: center; gap: calc(var(--f) * 0.1); }
+.opt { display: flex; flex-direction: column; align-items: center; min-width: calc(var(--f) * 0.95); padding: calc(var(--f) * 0.06) calc(var(--f) * 0.08);
+  background: var(--tile); border-radius: calc(var(--f) * 0.16); box-shadow: var(--shadow); }
+.opt .em { font-size: calc(var(--f) * 0.5); line-height: 1.2; }
+.opt .kw { font-size: max(13px, calc(var(--f) * 0.2)); line-height: 1.2; white-space: nowrap; }
+.opt .kw b, .ex b { color: var(--hi); font-weight: 700; }
+.ex { display: flex; flex-direction: column; align-items: center; font-size: max(14px, calc(var(--f) * 0.21)); line-height: 1.35; }
+.means { font-family: var(--display); font-weight: 600; font-size: max(14px, calc(var(--f) * 0.2)); color: var(--hi); white-space: nowrap; }
+.label, .note { font-family: var(--display); font-weight: 600; background: var(--tile); box-shadow: var(--shadow); border-radius: 999px; white-space: nowrap; }
+.label { font-size: max(18px, calc(var(--f) * 0.28)); padding: 0.3em 0.9em; }
+.note { position: absolute; left: 50%; bottom: 100%; margin-bottom: calc(var(--f) * 0.25); transform: translateX(-50%);
+  font-size: max(16px, calc(var(--f) * 0.24)); padding: 0.25em 0.8em; color: var(--hi); }
+</style>
+</head>
+<body>
+<main id="story">
+  <h1>Caroline Herschel's Comets</h1>
+  <p id="text"></p>
+</main>
+
+<script>
+(function () {
+  // ---- Sound icons ----
+  // id: [emoji, keyword with the chunk in brackets, example words that use the same letters the same way,
+  //      and for a chunk with a meaning (a suffix, a Greek root), what it means]
+  var SOUNDS = {
+    a_apple: ["🍎", "[a]pple", ["c[a]t", "h[a]t", "m[a]p"]], a_baby: ["👶", "b[a]by", ["p[a]per", "t[a]ble", "l[a]dy"]],
+    a_banana: ["🍌", "b[a]nana", ["[a]bout", "[a]go", "sof[a]"]],
+    astro_astronaut: ["🧑‍🚀", "[astro]naut", ["[astro]nomy"], "star"],
+    af_giraffe: ["🦒", "gir[af]fe", ["r[af]t", "st[af]f"]],
+    car_car: ["🚗", "[car]", ["[car]pet", "[car]t"]],
+    ath_bath: ["🛁", "b[ath]", ["p[ath]", "m[ath]"]],
+    bit_rabbit: ["🐰", "rab[bit]", ["ha[bit]"]],
+    c_cat: ["🐱", "[c]at", ["[c]up", "[c]ake", "[c]ome"]], c_pencil: ["✏️", "pen[c]il", ["[c]ity", "fa[c]e", "i[c]e"]],
+    ch_cheese: ["🧀", "[ch]eese", ["[ch]in", "mu[ch]", "lun[ch]"]], ch_school: ["🏫", "s[ch]ool", ["e[ch]o"]], ch_chef: ["👨‍🍳", "[ch]ef", ["ma[ch]ine"]],
+    e_egg: ["🥚", "[e]gg", ["b[e]d", "r[e]d", "t[e]n"]], e_zebra: ["🦓", "z[e]bra", ["m[e]", "b[e]", "h[e]"]],
+    e_chicken: ["🐔", "chick[e]n", ["kitt[e]n", "op[e]n", "sev[e]n"]], e_fish: ["🐟", "f[i]sh", []],
+    ea_peach: ["🍑", "p[ea]ch", ["[ea]t", "s[ea]", "r[ea]d"]], ea_bread: ["🍞", "br[ea]d", ["h[ea]d", "r[ea]dy", "f[ea]ther"]],
+    ea_steak: ["🥩", "st[ea]k", ["gr[ea]t", "br[ea]k"]],
+    ear_ear: ["👂", "[ear]", ["h[ear]", "n[ear]", "d[ear]"]], ear_bear: ["🐻", "b[ear]", ["p[ear]", "w[ear]"]],
+    ear_earth: ["🌍", "[ear]th", ["l[ear]n", "[ear]ly", "h[ear]d"]],
+    eng_engine: ["🚒", "[eng]ine", []], eng_ring: ["💍", "r[ing]", []],
+    eigh_neigh: ["🐴", "n[eigh]", ["w[eigh]", "sl[eigh]"]], eigh_height: ["📏", "h[eigh]t", []],
+    el_elephant: ["🐘", "[el]ephant", ["h[el]p", "[el]bow"]], el_camel: ["🐫", "cam[el]", ["trav[el]", "tow[el]", "lab[el]"]],
+    ept_slept: ["😴", "sl[ept]", ["k[ept]", "cr[ept]", "w[ept]"]],
+    er_sunflower: ["🌻", "sunflow[er]", ["sist[er]", "wat[er]", "h[er]"]],
+    er_teacher: ["🧑‍🏫", "teach[er]", ["farm[er]", "paint[er]", "bak[er]"], "a person who does it"],
+    et_rocket: ["🚀", "rock[et]", ["pock[et]", "jack[et]", "plan[et]"]], et_ballet: ["🩰", "ball[et]", []],
+    ew_screw: ["🔩", "scr[ew]", ["n[ew]", "ch[ew]", "fl[ew]"]], ew_sew: ["🪡", "s[ew]", []],
+    her_her: ["👩", "[her]", ["[her]d"]],
+    g_giraffe: ["🦒", "[g]iraffe", ["[g]em", "[g]iant", "pa[g]e"]], g_goat: ["🐐", "[g]oat", ["[g]o", "bi[g]", "[g]ame"]],
+    ight_light: ["💡", "l[ight]", ["r[ight]", "br[ight]", "s[ight]"]],
+    ine_pine: ["🌲", "p[ine]", ["l[ine]", "n[ine]", "f[ine]"]], ine_engine: ["🚒", "eng[ine]", ["imag[ine]"]],
+    ir_bird: ["🐦", "b[ir]d", ["g[ir]l", "sh[ir]t", "d[ir]t"]],
+    is_kiss: ["💋", "k[is]s", ["th[is]", "m[is]s"]], is_list: ["📝", "l[is]t", ["f[is]t", "m[is]t"]], is_eye: ["👁️", "[eye]", []],
+    ise_sunrise: ["🌅", "sunr[ise]", ["r[ise]", "w[ise]", "surpr[ise]"]],
+    line_line: ["📏", "[line]", ["out[line]", "on[line]"]],
+    land_landing: ["🛬", "[land]ing", ["is[land]", "Eng[land]", "[land]ed"]],
+    man_man: ["👨", "[man]", ["[man]y"]], man_human: ["🧍", "hu[man]", ["wo[man]"]],
+    nom_nom: ["🍪", "[nom] nom", []],
+    o_octopus: ["🐙", "[o]ctopus", ["h[o]t", "d[o]g", "st[o]p"]], o_ocean: ["🌊", "[o]cean", ["g[o]", "n[o]", "[o]pen"]],
+    o_lemon: ["🍋", "lem[o]n", ["wag[o]n", "sec[o]nd"]],
+    om_omelet: ["🍳", "[om]elet", ["m[om]", "T[om]"]], om_compass: ["🧭", "c[om]pass", ["c[om]fort", "c[om]pany"]],
+    on_bonfire: ["🔥", "b[on]fire", ["p[on]d", "m[on]ster"]], on_onion: ["🧅", "[on]ion", ["s[on]", "w[on]der"]],
+    ong_song: ["🎶", "s[ong]", ["l[ong]", "str[ong]", "wr[ong]"]],
+    or_corn: ["🌽", "c[or]n", ["f[or]", "h[or]se", "f[or]k"]], or_doctor: ["🧑‍⚕️", "doct[or]", ["act[or]", "col[or]"]],
+    ound_sound: ["🔊", "s[ound]", ["r[ound]", "gr[ound]", "f[ound]"]],
+    ov_love: ["❤️", "l[ov]e", ["gl[ov]e", "ab[ov]e", "[ov]en"]], ov_clover: ["🍀", "cl[ov]er", ["[ov]er", "st[ov]e"]],
+    ov_groove: ["🕺", "gr[oov]e", ["pr[ov]e", "rem[ov]e", "m[ov]ie"]],
+    own_crown: ["👑", "cr[own]", ["d[own]", "t[own]", "cl[own]"]], own_blown: ["🌬️", "bl[own]", ["gr[own]", "sh[own]", "thr[own]"]],
+    round_round: ["⭕", "[round]", ["g[round]", "a[round]"]],
+    star_star: ["⭐", "[star]", ["[star]t", "[star]fish"]],
+    s_snake: ["🐍", "[s]nake", ["[s]it", "bu[s]", "ye[s]"]], s_rose: ["🌹", "ro[s]e", ["i[s]", "ha[s]", "dog[s]"]],
+    sch_school: ["🏫", "[sch]ool", []], sch_sheep: ["🐑", "[sh]eep", []],
+    scope_microscope: ["🔬", "micro[scope]", ["peri[scope]"], "look at"],
+    tele_tv: ["📺", "[tele]vision", ["[tele]phone"], "far away"],
+    sur_surf: ["🏄", "[sur]f", ["[sur]prise"]],
+    sure_sure: ["👍", "[sure]", []], sure_treasure: ["💎", "trea[sure]", ["plea[sure]"]],
+    ter_water: ["💧", "wa[ter]", ["sis[ter]", "let[ter]", "but[ter]"]],
+    ture_picture: ["🖼️", "pic[ture]", ["na[ture]", "fu[ture]", "adven[ture]"]],
+    ull_bull: ["🐂", "b[ull]", ["p[ull]", "f[ull]"]], ull_skull: ["💀", "sk[ull]", ["d[ull]", "g[ull]"]],
+    un_run: ["🏃", "r[un]", ["f[un]", "b[un]", "s[un]ny"]],
+    y_puppy: ["🐶", "pupp[y]", ["happ[y]", "bab[y]", "funn[y]"]], y_fly: ["🪰", "fl[y]", ["m[y]", "cr[y]", "wh[y]"]],
+    y_yoyo: ["🪀", "[y]o-yo", ["[y]es", "[y]ellow"]]
+  };
+
+  // ---- Words ----
+  // How words are split: into the chunks most worth recognizing, not into single sounds. First the
+  // meaningful parts (Greek and Latin prefixes and roots like astro and tele, suffixes like er and ed),
+  // then whole familiar words inside the word (star, round, land), then spelling patterns (ight, ound).
+  // Chunks are separated by spaces. A chunk is its letters, then ":" and its icon choices.
+  // The right sound is marked *, or is the only choice. "!" marks a right sound that is NOT among the
+  // regular choices: that makes the word tricky, and the icon only shows up at the reveal.
+  // A chunk with no choices (a consonant with only one sound, like m or str) gets no icons at all.
+  // A plural s is written "s:+" and an emoji for the thing: it shows two of them ("stars" shows two stars).
+  // A past-tense ed is written "ed:<": it shows that the thing already happened.
+  var WORDS = {
+    after: "af:af_giraffe ter:ter_water",
+    along: "a:a_apple,a_baby,a_banana* l ong:ong_song",
+    around: "a:a_apple,a_baby,a_banana* round:round_round",
+    astronomer: "astro:astro_astronaut nom:nom_nom er:er_sunflower,er_teacher*",
+    caroline: "car:car_car o:o_octopus,o_ocean,o_lemon* line:line_line",
+    comet: "c:c_cat*,c_pencil om:om_omelet*,om_compass et:et_rocket*,et_ballet",
+    comets: "c:c_cat*,c_pencil om:om_omelet*,om_compass et:et_rocket*,et_ballet s:+☄️",
+    each: "ea:ea_peach*,ea_bread,ea_steak ch:ch_cheese*,ch_school,ch_chef",
+    eight: "eigh:eigh_neigh*,eigh_height t",
+    england: "eng:eng_engine,!eng_ring land:land_landing",
+    first: "f ir:ir_bird st",
+    found: "f ound:ound_sound",
+    full: "f ull:ull_bull*,ull_skull",
+    germany: "g:g_giraffe*,g_goat er:er_sunflower man:man_man,man_human* y:y_puppy*,y_fly,y_yoyo",
+    grew: "gr ew:ew_screw*,ew_sew",
+    herschel: "her:her_her sch:sch_school,!sch_sheep el:el_elephant,el_camel*",
+    island: "is:is_kiss,is_list,!is_eye land:land_landing",
+    learned: "l ear:ear_ear,ear_bear,ear_earth* n ed:<",
+    math: "m ath:ath_bath",
+    measure: "m ea:ea_peach,ea_bread*,ea_steak sure:sure_sure,sure_treasure*",
+    moved: "m ov:ov_love,ov_clover,!ov_groove ed:<",
+    nature: "n a:a_apple,a_baby*,a_banana ture:ture_picture",
+    night: "n ight:ight_light",
+    orbit: "or:or_corn*,or_doctor bit:bit_rabbit",
+    own: "own:own_crown,own_blown*",
+    sky: "sk y:y_puppy,y_fly*,y_yoyo",
+    stars: "star:star_star s:+⭐",
+    sun: "s:s_snake*,s_rose un:un_run",
+    surprises: "sur:sur_surf pr ise:ise_sunrise s:+🎁",
+    swept: "sw ept:ept_slept",
+    telescope: "tele:tele_tv scope:scope_microscope"
+  };
+  // Sight words: common words that are learned by sight rather than sounded out.
+  var SIGHT = "a an and all could her in is its of on one she so the to up was which with".split(" ");
+
+  var TEXT = "Caroline Herschel was an astronomer. She grew up in Germany and moved to England, which is on an island. " +
+    "She learned math so she could measure the stars. Night after night, she swept the sky with her telescope. " +
+    "In 1786, she found her first comet. Nature was full of surprises, and she found eight comets in all! " +
+    "Each one moved along its own orbit around the Sun.";
+
+  var $ = function (id) { return document.getElementById(id); };
+  var POP = "cubic-bezier(.34,1.56,.64,1)", GLIDE = "cubic-bezier(.2,.8,.3,1)";
+  var each = function (list, fn) { Array.prototype.forEach.call(list, fn); };
+
+  function parse(spec, key) { // "c:c_cat*,c_pencil om:..." -> [{ t, o: [ids], ok }]
+    var at = 0;
+    return spec.split(" ").map(function (part) {
+      var bits = part.split(":"), c = { t: bits[0], o: [], ok: null };
+      at += c.t.length;
+      if (bits[1] && bits[1].charAt(0) === "+") { // a plural: two of the thing
+        var base = key.slice(0, at - c.t.length), id = "plural_" + key;
+        SOUNDS[id] = [bits[1].slice(1) + bits[1].slice(1), base + "[" + c.t + "]", ["cat[s]", "dog[s]", "book[s]"], "more than one " + base];
+        c.o = [id]; c.ok = id;
+        return c;
+      }
+      if (bits[1] === "<") { // past tense: it already happened
+        SOUNDS["past_" + key] = ["⏪", key.slice(0, at - c.t.length) + "[" + c.t + "]", ["jump[ed]", "play[ed]", "paint[ed]"], "already happened"];
+        c.o = ["past_" + key]; c.ok = c.o[0];
+        return c;
+      }
+      if (bits[1]) bits[1].split(",").forEach(function (id) {
+        if (id.charAt(0) === "!") c.ok = id.slice(1);
+        else if (id.slice(-1) === "*") { c.ok = id.slice(0, -1); c.o.push(c.ok); }
+        else c.o.push(id);
+      });
+      if (!c.ok && c.o.length === 1) c.ok = c.o[0];
+      if (/^[^aeiouy]+$/.test(c.t) && c.o.length === 1 && c.ok === c.o[0]) c.o = []; // one-sound consonant: no icons
+      return c;
+    });
+  }
+  function bracket(s) { return s.replace("[", "<b>").replace("]", "</b>"); }
+  function shuffle(a) {
+    a = a.slice();
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+
+  // ---- The story page: every word is tappable (numbers aren't) ----
+  TEXT.split(/([A-Za-z']+)/).forEach(function (part, i) {
+    if (i % 2) {
+      var s = document.createElement("span");
+      s.className = "w"; s.textContent = part;
+      s.addEventListener("click", function () { open(s, part); });
+      $("text").appendChild(s);
+    } else if (part) $("text").appendChild(document.createTextNode(part));
+  });
+  Object.keys(WORDS).forEach(function (k) { // catch typos in the word list
+    parse(WORDS[k], k).forEach(function (c) { c.o.concat(c.ok ? [c.ok] : []).forEach(function (id) { if (!SOUNDS[id]) console.warn("No icon", id, "in", k); }); });
+    if (parse(WORDS[k], k).map(function (c) { return c.t; }).join("") !== k) console.warn("Chunks don't spell", k);
+  });
+
+  // ---- The word screen ----
+  var cur = null; // { span, focus, row, tiles, cols, step, sight, ready, closing }
+
+  function icon(id, cls) {
+    var b = document.createElement("div");
+    b.className = "opt" + (cls ? " " + cls : ""); b.dataset.id = id;
+    b.innerHTML = '<span class="em">' + SOUNDS[id][0] + '</span><span class="kw">' + bracket(SOUNDS[id][1]) + "</span>";
+    return b;
+  }
+
+  function open(span, word) {
+    if (cur) return;
+    var key = word.toLowerCase(), sight = SIGHT.indexOf(key) >= 0;
+    if (!sight && !WORDS[key]) { // no data yet: a little wiggle
+      span.animate([{ transform: "rotate(0deg)" }, { transform: "rotate(-6deg)" }, { transform: "rotate(6deg)" }, { transform: "rotate(0deg)" }], 300);
+      return;
+    }
+    var chunks = sight ? [{ t: key, o: [] }] : parse(WORDS[key], key);
+    var focus = document.createElement("div"), veil = document.createElement("div"), row = document.createElement("div"), x = document.createElement("button");
+    focus.id = "focus"; veil.className = "veil"; row.className = "row joined"; x.className = "close"; x.textContent = "×"; x.setAttribute("aria-label", "Close");
+    focus.appendChild(veil); focus.appendChild(row); focus.appendChild(x);
+    var tiles = [], cols = [], pos = 0;
+    chunks.forEach(function (c) {
+      var col = document.createElement("div"), tile = document.createElement("div");
+      col.className = "col"; tile.className = "chunk";
+      tile.textContent = word.substr(pos, c.t.length); // letters as written in the story (keeps a capital)
+      pos += c.t.length;
+      col.appendChild(tile);
+      if (c.o.length) {
+        var opts = document.createElement("div");
+        opts.className = "opts";
+        shuffle(c.o).forEach(function (id) { opts.appendChild(icon(id)); });
+        col.appendChild(opts);
+      }
+      row.appendChild(col);
+      tiles.push(tile); cols.push({ col: col, c: c });
+    });
+    if (sight) {
+      var lbl = document.createElement("div");
+      lbl.className = "label"; lbl.textContent = "👀 Sight word";
+      cols[0].col.appendChild(lbl);
+    }
+    document.body.appendChild(focus);
+
+    // Size: as big as fits, both across and down.
+    var W = window.innerWidth, H = window.innerHeight, most = Math.max(2, Math.max.apply(null, chunks.map(function (c) { return c.o.length; })));
+    var f = Math.min(sight ? 150 : 130, (H * 0.8 - 40) / (1.45 + most * 0.95));
+    for (var k = 0; k < 3; k++) {
+      focus.style.setProperty("--f", f + "px");
+      var rw = row.offsetWidth;
+      if (rw <= W - 40) break;
+      f *= (W - 40) / rw * 0.97;
+    }
+
+    cur = { span: span, focus: focus, row: row, tiles: tiles, cols: cols, step: 1, sight: sight, closing: false };
+    var g = joinGeometry();
+    span.classList.add("away");
+
+    var HOLD = sight ? 450 : 750, SPLIT = 450;
+    veil.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, easing: "ease-out" });
+    x.animate([{ opacity: 0 }, { opacity: 0, offset: 0.6 }, { opacity: 1 }], { duration: 900 });
+    row.animate([{ transform: g.fly }, { transform: "none" }], { duration: 480, easing: GLIDE });
+    if (!sight) {
+      tiles.forEach(function (t, i) { // the word holds together, then splits into chunks
+        t.animate([{ transform: "translateX(" + g.dx[i] + "px)" }, { transform: "translateX(" + g.dx[i] + "px)", offset: HOLD / (HOLD + SPLIT), easing: POP },
+                   { transform: "translateX(0px)" }], { duration: HOLD + SPLIT });
+      });
+      setTimeout(function () { if (cur && cur.row === row && !cur.closing) row.classList.remove("joined"); }, HOLD);
+      cols.forEach(function (cc, i) { // then the icons drop in under each chunk
+        each(cc.col.querySelectorAll(".opt"), function (b, j) {
+          b.animate([{ opacity: 0, transform: "translateY(-14px) scale(0.6)" }, { opacity: 1, transform: "none" }],
+                    { duration: 380, delay: HOLD + SPLIT - 50 + i * 60 + j * 80, easing: POP, fill: "backwards" });
+        });
+      });
+    } else {
+      lbl.animate([{ opacity: 0, transform: "scale(0.5)" }, { opacity: 1, transform: "none" }], { duration: 380, delay: HOLD, easing: POP, fill: "backwards" });
+    }
+    cur.ready = Date.now() + HOLD + (sight ? 300 : SPLIT + 300);
+
+    focus.addEventListener("click", function () { advance(); });
+    x.addEventListener("click", function (e) { e.stopPropagation(); close(); });
+  }
+
+  // Where the letters sit when the word is in one piece, and the trip between the story and the screen.
+  function joinGeometry() {
+    var c = cur, rr = c.row.getBoundingClientRect(), rects = c.tiles.map(function (t) { return t.getBoundingClientRect(); });
+    var pad = parseFloat(getComputedStyle(c.tiles[0]).paddingLeft), widths = rects.map(function (r) { return r.width - 2 * pad; });
+    var total = widths.reduce(function (a, b) { return a + b; }, 0), cx = rr.left + rr.width / 2, x0 = cx - total / 2, cy = rects[0].top + rects[0].height / 2;
+    var dx = rects.map(function (r, i) { var at = x0; for (var j = 0; j < i; j++) at += widths[j]; return at - (r.left + pad); });
+    var sr = c.span.getBoundingClientRect(), s0 = sr.height / rects[0].height;
+    c.row.style.transformOrigin = (cx - rr.left) + "px " + (cy - rr.top) + "px";
+    return { dx: dx, fly: "translate(" + (sr.left + sr.width / 2 - cx) + "px," + (sr.top + sr.height / 2 - cy) + "px) scale(" + s0 + ")" };
+  }
+
+  function advance() {
+    if (!cur || cur.closing || Date.now() < cur.ready) return;
+    if (cur.step === 1 && !cur.sight) reveal();
+    else close();
+  }
+
+  // The reveal: in each column only the right icon stays, slides up under its chunk, and gets examples.
+  function reveal() {
+    var c = cur, key = c.span.textContent.toLowerCase(), tricky = false;
+    c.step = 2;
+    c.ready = Date.now() + 900;
+    var gone = [];
+    c.cols.forEach(function (cc) {
+      if (!cc.c.o.length) return;
+      each(cc.col.querySelectorAll(".opt"), function (b) { if (b.dataset.id !== cc.c.ok) gone.push(b); });
+      if (cc.c.o.indexOf(cc.c.ok) < 0) tricky = cc.tricky = true;
+    });
+    gone.forEach(function (b) { b.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "scale(0.6)" }], { duration: 220, fill: "forwards" }); });
+    setTimeout(function () {
+      if (cur !== c || c.closing) return;
+      var moving = c.tiles.slice(), first;
+      c.cols.forEach(function (cc) { var k = cc.col.querySelector('.opt[data-id="' + cc.c.ok + '"]'); if (k) moving.push(k); });
+      first = moving.map(function (e) { return e.getBoundingClientRect(); });
+      gone.forEach(function (b) { b.getAnimations().forEach(function (a) { a.cancel(); }); b.remove(); });
+      var fresh = [];
+      c.cols.forEach(function (cc) {
+        if (!cc.c.o.length) return;
+        var opts = cc.col.querySelector(".opts");
+        if (cc.tricky) { var t = icon(cc.c.ok); opts.appendChild(t); fresh.push(t); }
+        if (SOUNDS[cc.c.ok][3]) {
+          var m = document.createElement("div");
+          m.className = "means"; m.textContent = SOUNDS[cc.c.ok][3];
+          opts.appendChild(m); fresh.push(m);
+        }
+        var ex = SOUNDS[cc.c.ok][2].filter(function (w) { return key.indexOf(w.replace(/[\[\]]/g, "").toLowerCase()) !== 0; }).slice(0, 3); // not the word itself
+        if (ex.length) {
+          var d = document.createElement("div");
+          d.className = "ex";
+          d.innerHTML = ex.map(function (w) { return "<span>" + bracket(w) + "</span>"; }).join("");
+          opts.appendChild(d); fresh.push(d);
+        }
+      });
+      moving.forEach(function (e, i) { // slide from where they were to where they are now
+        var r = e.getBoundingClientRect(), ddx = first[i].left - r.left, ddy = first[i].top - r.top;
+        if (Math.abs(ddx) + Math.abs(ddy) > 0.5) e.animate([{ transform: "translate(" + ddx + "px," + ddy + "px)" }, { transform: "none" }], { duration: 360, easing: GLIDE });
+      });
+      fresh.forEach(function (e, i) {
+        e.animate([{ opacity: 0, transform: "translateY(-10px)" }, { opacity: 1, transform: "none" }], { duration: 320, delay: 260 + i * 60, easing: "ease-out", fill: "backwards" });
+      });
+      if (tricky) {
+        var n = document.createElement("div");
+        n.className = "note"; n.textContent = "Tricky one!";
+        c.row.appendChild(n);
+        n.animate([{ opacity: 0, transform: "translateX(-50%) scale(0.5)" }, { opacity: 1, transform: "translateX(-50%)" }], { duration: 380, delay: 200, easing: POP, fill: "backwards" });
+      }
+    }, 230);
+  }
+
+  // Closing runs the opening backwards: everything under the word goes, the chunks join up, the word flies home.
+  function close() {
+    if (!cur || cur.closing) return;
+    var c = cur;
+    c.closing = true;
+    c.focus.getAnimations({ subtree: true }).forEach(function (a) { a.finish(); });
+    var g = joinGeometry();
+    each(c.row.querySelectorAll(".opts, .label, .note"), function (o) { o.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: "forwards" }); });
+    c.row.classList.add("joined");
+    c.tiles.forEach(function (t, i) {
+      t.animate([{ transform: "translateX(0px)" }, { transform: "translateX(" + g.dx[i] + "px)" }], { duration: 280, delay: 120, easing: "ease-in-out", fill: "forwards" });
+    });
+    c.row.animate([{ transform: "none" }, { transform: g.fly }], { duration: 380, delay: 400, easing: "cubic-bezier(.5,0,.7,1)", fill: "forwards" });
+    c.focus.querySelector(".veil").animate([{ opacity: 1 }, { opacity: 0 }], { duration: 380, delay: 400, fill: "forwards" });
+    c.focus.querySelector(".close").animate([{ opacity: 1 }, { opacity: 0 }], { duration: 150, fill: "forwards" });
+    setTimeout(function () { c.span.classList.remove("away"); c.focus.remove(); cur = null; }, 790);
+  }
+  window.addEventListener("resize", function () { if (cur) { cur.span.classList.remove("away"); cur.focus.remove(); cur = null; } });
+
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function () {});
+})();
+</script>
+</body>
+</html>
