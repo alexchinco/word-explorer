@@ -34,14 +34,8 @@ button { font: inherit; color: inherit; cursor: pointer; border: none; backgroun
 
 /* The story */
 [hidden] { display: none !important; }
-#home, #story { max-width: 780px; margin: 0 auto; padding: max(28px, env(safe-area-inset-top)) 24px 40px; }
+#story { max-width: 780px; margin: 0 auto; padding: max(28px, env(safe-area-inset-top)) 24px 40px; }
 h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw, 42px); margin: 0 0 18px; }
-#tiles { display: grid; gap: 16px; }
-.storytile { display: flex; align-items: center; gap: 22px; padding: 26px 28px; background: var(--tile); border-radius: 26px; box-shadow: var(--shadow);
-  font-family: var(--display); font-weight: 600; font-size: clamp(26px, 4vw, 36px); text-align: left; }
-.storytile .si { font-size: 1.8em; line-height: 1; }
-#back { font-family: var(--display); font-weight: 600; font-size: 20px; padding: 8px 16px 8px 12px; margin: 0 0 14px -4px; background: var(--tile);
-  border-radius: 999px; box-shadow: var(--shadow); }
 #story p { font-size: clamp(24px, 3.5vw, 34px); line-height: 1.75; margin: 0; }
 .w { cursor: pointer; display: inline-block; transition: transform 0.12s; }
 .w:active { transform: scale(0.94); }
@@ -69,17 +63,14 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
 .label { font-size: max(18px, calc(var(--f) * 0.28)); padding: 0.3em 0.9em; }
 .notes { position: absolute; left: 50%; bottom: 100%; margin-bottom: calc(var(--f) * 0.25); transform: translateX(-50%); display: flex; gap: 12px; }
 .cap { color: var(--hi); }
+.answer { font-weight: 700; font-size: var(--f); line-height: 1.15; padding: 0.06em 0 0.1em 0.2em; white-space: nowrap; }
+.answer b { color: var(--hi); }
 .note {
   font-size: max(16px, calc(var(--f) * 0.24)); padding: 0.25em 0.8em; color: var(--hi); }
 </style>
 </head>
 <body>
-<main id="home">
-  <h1>Word Explorer</h1>
-  <div id="tiles"></div>
-</main>
-<main id="story" hidden>
-  <button type="button" id="back" aria-label="Back to stories">‹ Stories</button>
+<main id="story">
   <h1 id="title"></h1>
   <p id="text"></p>
 </main>
@@ -277,17 +268,19 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     telescope: "tele:tele_tv scope:scope_microscope"
   };
   // Sight words: common words that are learned by sight rather than sounded out.
+  // Words whose clearest explanation is a picture of what they mean, shown after the word at the reveal.
+  var ANSWERS = { eight: "8" };
   // Names: a capital letter at the start tells you the word is a name.
   var NAMES = "anning caroline england germany herschel mary sun".split(" ");
   var SIGHT = "a an and all by could for her in is it its of on one out she so some the to up very was when which with".split(" ");
 
   var STORIES = [
-    { title: "Caroline Herschel's Comets", icon: "☄️",
+    { title: "Caroline Herschel's Comets",
       text: "Caroline Herschel was an astronomer. She grew up in Germany and moved to England, which is on an island. " +
         "She learned math so she could measure the stars. Night after night, she swept the sky with her telescope. " +
         "In 1786, she found her first comet. Nature was full of surprises, and she found eight comets in all! " +
         "Each one moved along its own orbit around the Sun." },
-    { title: "Mary Anning's Sea Monsters", icon: "🦕",
+    { title: "Mary Anning's Sea Monsters",
       text: "Mary Anning lived by the sea in England. After big storms, she searched the crumbly cliffs for fossils. " +
         "When Mary was about twelve, her brother found the skull of a giant sea reptile. Mary dug out the rest of its skeleton. " +
         "It was called an ichthyosaur, which means \"fish lizard.\" Later, she discovered a creature with a tiny head and a very long neck. " +
@@ -331,15 +324,6 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     return a;
   }
 
-  // ---- Home: a tile for each story ----
-  STORIES.forEach(function (st, n) {
-    var b = document.createElement("button");
-    b.className = "storytile";
-    b.innerHTML = '<span class="si">' + st.icon + "</span><span>" + st.title + "</span>";
-    b.addEventListener("click", function () { show(n); });
-    $("tiles").appendChild(b);
-  });
-  $("back").addEventListener("click", function () { $("story").hidden = true; $("home").hidden = false; window.scrollTo(0, 0); });
 
   // ---- A story page: every word is tappable (numbers aren't) ----
   function show(n) {
@@ -354,8 +338,14 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
         $("text").appendChild(s);
       } else if (part) $("text").appendChild(document.createTextNode(part));
     });
-    $("home").hidden = true; $("story").hidden = false; window.scrollTo(0, 0);
   }
+  // The app picks the story: a random one, not the same as last time.
+  var last = -1;
+  try { last = +localStorage.getItem("lastStory"); } catch (e) {}
+  var pick = Math.floor(Math.random() * STORIES.length);
+  if (STORIES.length > 1 && pick === last) pick = (pick + 1) % STORIES.length;
+  try { localStorage.setItem("lastStory", pick); } catch (e) {}
+  show(pick);
   Object.keys(WORDS).forEach(function (k) { // catch typos in the word list
     parse(WORDS[k], k).forEach(function (c) { c.o.concat(c.ok ? [c.ok] : []).forEach(function (id) { if (!SOUNDS[id]) console.warn("No icon", id, "in", k); }); });
     if (parse(WORDS[k], k).map(function (c) { return c.t; }).join("") !== k) console.warn("Chunks don't spell", k);
@@ -507,6 +497,11 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
           opts.appendChild(d); fresh.push(d);
         }
       });
+      if (ANSWERS[key]) { // "eight = 8"
+        var an = document.createElement("div");
+        an.className = "answer"; an.innerHTML = "= <b>" + ANSWERS[key] + "</b>";
+        c.row.appendChild(an); fresh.unshift(an);
+      }
       moving.forEach(function (e, i) { // slide from where they were to where they are now
         var r = e.getBoundingClientRect(), ddx = first[i].left - r.left, ddy = first[i].top - r.top;
         if (Math.abs(ddx) + Math.abs(ddy) > 0.5) e.animate([{ transform: "translate(" + ddx + "px," + ddy + "px)" }, { transform: "none" }], { duration: 360, easing: GLIDE });
@@ -530,7 +525,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
     c.closing = true;
     c.focus.getAnimations({ subtree: true }).forEach(function (a) { a.finish(); });
     var g = joinGeometry();
-    each(c.row.querySelectorAll(".opts, .label, .notes"), function (o) { o.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: "forwards" }); });
+    each(c.row.querySelectorAll(".opts, .label, .notes, .answer"), function (o) { o.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: "forwards" }); });
     c.row.classList.add("joined");
     c.tiles.forEach(function (t, i) {
       t.animate([{ transform: "translateX(0px)" }, { transform: "translateX(" + g.dx[i] + "px)" }], { duration: 280, delay: 120, easing: "ease-in-out", fill: "forwards" });
