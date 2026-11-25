@@ -961,7 +961,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
       if (c.o.length) {
         var opts = document.createElement("div");
         opts.className = "opts";
-        shuffle(c.o).forEach(function (id) { opts.appendChild(icon(id)); });
+        opts.appendChild(icon(c.ok)); // straight to the right sound (the other choices stay in the data)
         col.appendChild(opts);
       }
       row.appendChild(col);
@@ -986,6 +986,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
         row.appendChild(an0);
       }
     }
+    var extras = sight ? [] : details(key, row, tiles, cols);
     document.body.appendChild(focus);
 
     // Size: as big as fits, both across and down.
@@ -1008,10 +1009,13 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
       });
       setTimeout(function () { if (cur && cur.row === row && !cur.closing) row.classList.remove("joined"); }, HOLD);
       cols.forEach(function (cc, i) { // then the icons drop in under each chunk
-        each(cc.col.querySelectorAll(".opt"), function (b, j) {
+        each(cc.col.querySelectorAll(".opt"), function (b) {
           b.animate([{ opacity: 0, transform: "translateY(-14px) scale(0.6)" }, { opacity: 1, transform: "none" }],
-                    { duration: 380, delay: HOLD + SPLIT - 50 + i * 60 + j * 80, easing: POP, fill: "backwards" });
+                    { duration: 380, delay: HOLD + SPLIT - 50 + i * 60, easing: POP, fill: "backwards" });
         });
+      });
+      extras.forEach(function (e, i) { // with their examples and notes
+        e.animate([{ opacity: 0, transform: "translateY(-10px)" }, { opacity: 1, transform: "none" }], { duration: 320, delay: HOLD + SPLIT + 150 + i * 50, easing: "ease-out", fill: "backwards" });
       });
     } else {
       lbl.animate([{ opacity: 0, transform: "scale(0.5)" }, { opacity: 1, transform: "none" }], { duration: 380, delay: HOLD, easing: POP, fill: "backwards" });
@@ -1033,7 +1037,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
   // Shrink the word screen until the row fits across the screen.
   function fitRow(focus, row, f) {
     var W = window.innerWidth;
-    for (var k = 0; k < 6; k++) {
+    for (var k = 0; k < 12; k++) {
       focus.style.setProperty("--f", f + "px");
       var rw = row.offsetWidth;
       if (rw <= W - 40) break;
@@ -1055,89 +1059,56 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw
 
   function advance() {
     if (!cur || cur.closing || Date.now() < cur.ready) return;
-    if (cur.step === 1 && !cur.sight) reveal();
-    else close();
+    close();
   }
 
-  // The reveal: in each column only the right icon stays, slides up under its chunk, and gets examples.
-  function reveal() {
-    var c = cur, key = c.span.textContent.toLowerCase(), tricky = false;
-    c.step = 2;
-    c.ready = Date.now() + 900;
-    var gone = [];
-    c.cols.forEach(function (cc) {
+  // What goes under each chunk: the right icon's meaning and examples, plus the notes for the whole word.
+  function details(key, row, tiles, cols) {
+    var fresh = [], tricky = false, notes = row.querySelector(".notes");
+    cols.forEach(function (cc, ci) {
       if (!cc.c.o.length) return;
-      each(cc.col.querySelectorAll(".opt"), function (b) { if (b.dataset.id !== cc.c.ok) gone.push(b); });
-      if (cc.c.o.indexOf(cc.c.ok) < 0) tricky = cc.tricky = true;
+      if (cc.c.o.indexOf(cc.c.ok) < 0) tricky = true;
+      var opts = cc.col.querySelector(".opts");
+      if (cc.c.ok.indexOf("past_") === 0) { // the word's own root: "tape → taped"
+        var root = "";
+        for (var q = 0; q < ci; q++) if (!cols[q].c.extra) root += cols[q].c.t;
+        var kw = opts.querySelector(".kw");
+        if (kw) kw.innerHTML = root + " → " + key.slice(0, key.length - cc.c.t.length) + "<b>" + cc.c.t + "</b>";
+      }
+      if (SOUNDS[cc.c.ok][3]) {
+        var m = document.createElement("div");
+        m.className = "means"; m.textContent = SOUNDS[cc.c.ok][3];
+        opts.appendChild(m); fresh.push(m);
+      }
+      var ex = SOUNDS[cc.c.ok][2].filter(function (w) { return key.indexOf(w.replace(/[\[\]]/g, "").toLowerCase()) !== 0; }).slice(0, 3); // not the word itself
+      if (ex.length) {
+        var d = document.createElement("div");
+        d.className = "ex";
+        d.innerHTML = ex.map(function (w) { return "<span>" + bracket(w) + "</span>"; }).join("");
+        opts.appendChild(d); fresh.push(d);
+      }
     });
-    gone.forEach(function (b) { b.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "scale(0.6)" }], { duration: 220, fill: "forwards" }); });
-    setTimeout(function () {
-      if (cur !== c || c.closing) return;
-      var moving = c.tiles.slice(), first;
-      c.cols.forEach(function (cc) { var k = cc.col.querySelector('.opt[data-id="' + cc.c.ok + '"]'); if (k) moving.push(k); });
-      first = moving.map(function (e) { return e.getBoundingClientRect(); });
-      gone.forEach(function (b) { b.getAnimations().forEach(function (a) { a.cancel(); }); b.remove(); });
-      var fresh = [];
-      c.cols.forEach(function (cc) {
-        if (!cc.c.o.length) return;
-        var opts = cc.col.querySelector(".opts");
-        if (cc.tricky) { var t = icon(cc.c.ok); opts.appendChild(t); fresh.push(t); }
-        if (cc.c.ok.indexOf("past_") === 0) { // the word's own root: "tape → taped"
-          var root = "", ci = c.cols.indexOf(cc);
-          for (var q = 0; q < ci; q++) if (!c.cols[q].c.extra) root += c.cols[q].c.t;
-          var kw = opts.querySelector('.opt[data-id="' + cc.c.ok + '"] .kw');
-          if (kw) kw.innerHTML = root + " → " + key.slice(0, key.length - cc.c.t.length) + "<b>" + cc.c.t + "</b>";
-        }
-        if (SOUNDS[cc.c.ok][3]) {
-          var m = document.createElement("div");
-          m.className = "means"; m.textContent = SOUNDS[cc.c.ok][3];
-          opts.appendChild(m); fresh.push(m);
-        }
-        var ex = SOUNDS[cc.c.ok][2].filter(function (w) { return key.indexOf(w.replace(/[\[\]]/g, "").toLowerCase()) !== 0; }).slice(0, 3); // not the word itself
-        if (ex.length) {
-          var d = document.createElement("div");
-          d.className = "ex";
-          d.innerHTML = ex.map(function (w) { return "<span>" + bracket(w) + "</span>"; }).join("");
-          opts.appendChild(d); fresh.push(d);
-        }
-      });
-      if (ANSWERS[key]) { // "eight = 8"
-        var an = document.createElement("div");
-        an.className = "answer"; an.innerHTML = "= <b>" + ANSWERS[key] + "</b>";
-        c.row.appendChild(an); fresh.unshift(an);
+    if (ANSWERS[key]) { // "eight = 8"
+      var an = document.createElement("div");
+      an.className = "answer"; an.innerHTML = "= <b>" + ANSWERS[key] + "</b>";
+      row.appendChild(an); fresh.unshift(an);
+    }
+    function note(text) {
+      var n = document.createElement("div");
+      n.className = "note"; n.textContent = text;
+      notes.appendChild(n); fresh.push(n);
+    }
+    if (ROOTS[key]) note("🌱 Root word: " + ROOTS[key]);
+    if (SILENT[key]) { // gray out the silent letter and say so
+      var ch = SILENT[key];
+      for (var ti = 0; ti < tiles.length; ti++) {
+        var cap = tiles[ti].querySelector(".cap"), tx = tiles[ti].textContent, at = tx.toLowerCase().indexOf(ch);
+        if (at >= 0 && !(cap && at === 0)) { tiles[ti].innerHTML = (cap ? cap.outerHTML + tx.slice(1, at) : tx.slice(0, at)) + '<span class="mute">' + tx.charAt(at) + "</span>" + tx.slice(at + 1); break; }
       }
-      if (c.row.offsetWidth > window.innerWidth - 40) fitRow(c.focus, c.row, parseFloat(c.focus.style.getPropertyValue("--f"))); // the reveal can be wider
-      moving.forEach(function (e, i) { // slide from where they were to where they are now
-        var r = e.getBoundingClientRect(), ddx = first[i].left - r.left, ddy = first[i].top - r.top;
-        if (Math.abs(ddx) + Math.abs(ddy) > 0.5) e.animate([{ transform: "translate(" + ddx + "px," + ddy + "px)" }, { transform: "none" }], { duration: 360, easing: GLIDE });
-      });
-      fresh.forEach(function (e, i) {
-        e.animate([{ opacity: 0, transform: "translateY(-10px)" }, { opacity: 1, transform: "none" }], { duration: 320, delay: 260 + i * 60, easing: "ease-out", fill: "backwards" });
-      });
-      if (ROOTS[key]) {
-        var rn = document.createElement("div");
-        rn.className = "note"; rn.textContent = "🌱 Root word: " + ROOTS[key];
-        c.row.querySelector(".notes").appendChild(rn);
-        rn.animate([{ opacity: 0, transform: "scale(0.5)" }, { opacity: 1, transform: "none" }], { duration: 380, delay: 200, easing: POP, fill: "backwards" });
-      }
-      if (SILENT[key]) { // gray out the silent letter and say so
-        var ch = SILENT[key];
-        for (var ti = 0; ti < c.tiles.length; ti++) {
-          var tx = c.tiles[ti].textContent, at = tx.toLowerCase().indexOf(ch);
-          if (at >= 0) { c.tiles[ti].innerHTML = tx.slice(0, at) + '<span class="mute">' + tx.charAt(at) + "</span>" + tx.slice(at + 1); break; }
-        }
-        var sn = document.createElement("div");
-        sn.className = "note"; sn.textContent = "🤫 Silent " + ch;
-        c.row.querySelector(".notes").appendChild(sn);
-        sn.animate([{ opacity: 0, transform: "scale(0.5)" }, { opacity: 1, transform: "none" }], { duration: 380, delay: 200, easing: POP, fill: "backwards" });
-      }
-      if (tricky) {
-        var n = document.createElement("div");
-        n.className = "note"; n.textContent = "Tricky one!";
-        c.row.querySelector(".notes").appendChild(n);
-        n.animate([{ opacity: 0, transform: "scale(0.5)" }, { opacity: 1, transform: "none" }], { duration: 380, delay: 200, easing: POP, fill: "backwards" });
-      }
-    }, 230);
+      note("🤫 Silent " + ch);
+    }
+    if (tricky) note("Tricky one!");
+    return fresh;
   }
 
   // Closing runs the opening backwards: everything under the word goes, the chunks join up, the word flies home.
